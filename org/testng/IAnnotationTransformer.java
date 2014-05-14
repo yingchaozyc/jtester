@@ -35,6 +35,7 @@ public interface IAnnotationTransformer extends ITestNGListener {
 	 *            If the annotation was found on a method, this parameter
 	 *            represents this method (null otherwise).
 	 */
+	@SuppressWarnings("rawtypes")
 	public void transform(ITestAnnotation annotation, Class testClass,
 			Constructor testConstructor, Method testMethod);
 

@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
  */
 public class DefaultAnnotationTransformer implements IAnnotationTransformer {
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public void transform(ITestAnnotation annotation, Class testClass,
 			Constructor testConstructor, Method testMethod) {
