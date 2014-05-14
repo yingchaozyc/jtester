@@ -39,6 +39,8 @@ import org.testng.reporters.XMLStringBuffer;
 import org.testng.xml.XmlClass;
 
 /**
+ * 04年的代码。。 注释不准确。。其实就是TestNG用到的工具类。
+ * 
  * Helper methods to parse annotations.
  *
  * @author Cedric Beust, Apr 26, 2004

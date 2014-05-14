@@ -101,6 +101,7 @@ import com.beust.jcommander.ParameterException;
  * @author <a href = "mailto:cedric&#64;beust.com">Cedric Beust</a>
  * @author <a href = "mailto:the_mindstorm&#64;evolva.ro">Alex Popescu</a>
  */
+@SuppressWarnings({"unchecked","rawtypes"})
 public class TestNG {
 
 	/** This class' log4testng Logger. */
@@ -125,6 +126,7 @@ public class TestNG {
 	// 保存当前实例。init方法中赋值。
 	private static TestNG m_instance;
 
+	// 保存命令行传入参数信息。启动时候由privateMain方法初始化该值。
 	private static JCommander m_jCommander;
 
 	private List<String> m_commandLineMethods;
@@ -147,6 +149,8 @@ public class TestNG {
 	// These listeners can be overridden from the command line
 	private List<ITestListener> m_testListeners = Lists.newArrayList();
 	private List<ISuiteListener> m_suiteListeners = Lists.newArrayList();
+	
+	// 报表列表
 	private Set<IReporter> m_reporters = Sets.newHashSet();
 
 	protected static final int HAS_FAILURE = 1;
@@ -186,6 +190,7 @@ public class TestNG {
 	/** The path of the testng.xml file inside the jar file */
 	private String m_xmlPathInJar = CommandLineArgs.XML_PATH_IN_JAR_DEFAULT;
 
+	// 初始化TestNG套件列表(根据命令行参数解析而来)
 	private List<String> m_stringSuites = Lists.newArrayList();
 
 	private IHookable m_hookable;
@@ -197,6 +202,7 @@ public class TestNG {
 	private List<IExecutionListener> m_executionListeners = Lists
 			.newArrayList();
 
+	// initializeSuitesAndJarFile方法来标记这个参数。
 	private boolean m_isInitialized = false;
 
 	/**
@@ -230,7 +236,12 @@ public class TestNG {
 	public int getStatus() {
 		return m_status;
 	}
-
+	
+	/**
+	 * 用或来累加状态
+	 * 
+	 * @param status
+	 */
 	private void setStatus(int status) {
 		m_status |= status;
 	}
@@ -281,6 +292,7 @@ public class TestNG {
 	}
 
 	public void initializeSuitesAndJarFile() {
+		// 避免多次调用该方法
 		// The Eclipse plug-in (RemoteTestNG) might have invoked this method
 		// already
 		// so don't initialize suites twice.
@@ -288,7 +300,10 @@ public class TestNG {
 			return;
 		}
 
+		// 还没标记过，标记
 		m_isInitialized = true;
+		
+		// m_suites不一定在每个单元测试都有的 先略过 TODO 
 		if (m_suites.size() > 0) {
 			// to parse the suite files (<suite-file>), if any
 			for (XmlSuite s : m_suites) {
@@ -317,6 +332,7 @@ public class TestNG {
 		}
 
 		//
+		// m_stringSuites是肯定有的。
 		// Parse the suites that were passed on the command line
 		//
 		for (String suitePath : m_stringSuites) {
@@ -324,14 +340,15 @@ public class TestNG {
 				LOGGER.debug("suiteXmlPath: \"" + suitePath + "\"");
 			}
 			try {
+				// 具体是如何解析的我不是太关心
 				Collection<XmlSuite> allSuites = getParser(suitePath).parse();
 
 				for (XmlSuite s : allSuites) {
 					// If test names were specified, only run these test names
-					if (m_testNames != null) {
+					if (m_testNames != null) {   // 这个是什么时候初始化的?
 						m_suites.add(extractTestNames(s, m_testNames));
 					} else {
-						m_suites.add(s);
+						m_suites.add(s);		  // m_suites更新
 					}
 				}
 			} catch (FileNotFoundException e) {
@@ -356,7 +373,7 @@ public class TestNG {
 		}
 
 		//
-		// jar path
+		// jar path 命令行传入的suites优先于jar中的suite。 TODO(需要进一步理解)
 		//
 		// If suites were passed on the command line, they take precedence over
 		// the suite file
@@ -375,7 +392,7 @@ public class TestNG {
 		}
 
 		// We have a jar file and no XML file was specified: try to find an XML
-		// file inside the jar
+		// file inside the jar  感觉m_jarPath有东西但是命令行没传入suite才会走到这里? TODO
 		File jarFile = new File(m_jarPath);
 
 		try {
@@ -796,7 +813,10 @@ public class TestNG {
 	 */
 	private Integer m_verbose = null;
 
+	// TestNG实例化时初始化注释转换器
 	private final IAnnotationTransformer m_defaultAnnoProcessor = new DefaultAnnotationTransformer();
+	
+	// 初始化时持有注释转换器。
 	private IAnnotationTransformer m_annotationTransformer = m_defaultAnnoProcessor;
 
 	private Boolean m_skipFailedInvocationCounts = false;
@@ -813,6 +833,7 @@ public class TestNG {
 	private boolean m_preserveOrder = false;
 	private Boolean m_groupByInstances;
 
+	// 核心的配置管理接口
 	private IConfiguration m_configuration;
 
 	/**
@@ -893,26 +914,41 @@ public class TestNG {
 		}
 	}
 
+	/**
+	 * 为什么这里需要实例的方式添加? 不是直接new对象呢 擦。TODO
+	 * 
+	 * @param r
+	 */
 	private void addReporter(Class<? extends IReporter> r) {
 		if (!m_reporters.contains(r)) {
 			m_reporters.add(ClassHelper.newInstance(r));
 		}
 	}
 
+	/**
+	 * 添加异常错误监听器，添加报表信息
+	 */
 	private void initializeDefaultListeners() {
+		// 初始化了一个异常错误的监听器，并添加到TestNG中
 		m_testListeners.add(new ExitCodeListener(this));
 
+		// 是否使用默认的Listener，默认是true。
 		if (m_useDefaultListeners) {
+			// 添加6种报表类型
 			addReporter(SuiteHTMLReporter.class);
 			addReporter(Main.class);
 			addReporter(FailedReporter.class);
 			addReporter(XMLReporter.class);
+			
+			// 参数oldDestngEmailableReporter用来指定是否使用老的邮件报表
 			if (System.getProperty("oldDestngEmailableReporter") != null) {
 				addReporter(EmailableReporter.class);
 			} else {
 				addReporter(EmailableReporter2.class);
 			}
 			addReporter(JUnitReportReporter.class);
+			
+			// 初始化的时候m_verbose是null
 			if (m_verbose != null && m_verbose > 4) {
 				addListener(new VerboseReporter("[TestNG] "));
 			}
@@ -920,18 +956,22 @@ public class TestNG {
 	}
 
 	private void initializeConfiguration() {
-		ITestObjectFactory factory = m_objectFactory;
+		ITestObjectFactory factory = m_objectFactory;    // 初始化时候objectFactory为空
+		
 		//
+		// 不明白这里，需要关注
 		// Install the listeners found in ServiceLoader (or use the class
 		// loader for tests, if specified).
 		//
 		addServiceLoaderListeners();
 
 		//
-		// Install the listeners found in the suites
+		// 这里在第一步已经安装了一个suites在里边，可循环
+		// 但是如果跑的是最简单的例子，这个循环等于就没跑
+		// Install the listeners found in the suites 
 		//
 		for (XmlSuite s : m_suites) {
-			for (String listenerName : s.getListeners()) {
+			for (String listenerName : s.getListeners()) {	// listener默认是没有的
 				Class<?> listenerClass = ClassHelper.forName(listenerName);
 
 				// If specified listener does not exist, a TestNGException will
@@ -945,8 +985,8 @@ public class TestNG {
 				addListener(listener);
 			}
 
-			//
-			// Install the method selectors
+			// getMethodSelectors默认也是没有的
+			// Install the method selectors 
 			//
 			for (XmlMethodSelector methodSelector : s.getMethodSelectors()) {
 				addMethodSelector(methodSelector.getClassName(),
@@ -965,15 +1005,17 @@ public class TestNG {
 				}
 			}
 		}
-
-		m_configuration.setAnnotationFinder(new JDK15AnnotationFinder(
-				getAnnotationTransformer()));
-		m_configuration.setHookable(m_hookable);
-		m_configuration.setConfigurable(m_configurable);
-		m_configuration.setObjectFactory(factory);
+		
+		// new出来一个注解搜寻器并设置到核心的配置管理接口。
+		m_configuration.setAnnotationFinder(new JDK15AnnotationFinder(getAnnotationTransformer()));
+		m_configuration.setHookable(m_hookable);			// 最简单的例子的时候这里是空
+		m_configuration.setConfigurable(m_configurable);	// 最简单的例子的时候这里是空
+		m_configuration.setObjectFactory(factory);			// 最简单的例子的时候这里是空
 	}
 
 	/**
+	 * 不明白这里 TODO 想要加载什么东西?
+	 * 
 	 * Using reflection to remain Java 5 compliant.
 	 */
 	private void addServiceLoaderListeners() {
@@ -1014,6 +1056,9 @@ public class TestNG {
 	}
 
 	/**
+	 * 准备执行单元测试前做一遍完整性检查。保证需要的环境和数据都准备好了。
+	 * 如果没准备好，会抛出TestNGException异常。
+	 * 
 	 * Before suites are executed, do a sanity check to ensure all required
 	 * conditions are met. If not, throw an exception to stop test execution
 	 * 
@@ -1021,6 +1066,8 @@ public class TestNG {
 	 *             if the sanity check fails
 	 */
 	private void sanityCheck() {
+		// 保证suite和test的name是唯一的。 TODO
+		// 后边还是要关注下从xml解析到XmlSuite的过程。
 		checkTestNames(m_suites);
 		checkSuiteNames(m_suites);
 	}
@@ -1065,43 +1112,56 @@ public class TestNG {
 	}
 
 	/**
+	 * TestNG正式启动。其实启动的方式有点像spring? 
+	 * 
 	 * Run TestNG.
 	 */
 	public void run() {
+		// 初始化命令行传入的套件suites以及jar包内的suites
 		initializeSuitesAndJarFile();
+		
+		// 在最简单的例子下，基本上没做什么事情。需要关注一下里边的那个反射调用到底在干吗。
 		initializeConfiguration();
+		
+		// 添加异常错误监听器，添加报表信息
 		initializeDefaultListeners();
+		
+		// 命令行套件添加，由于我们直接指定的是xml内容，所以这里什么都没做
 		initializeCommandLineSuites();
+		
+		// 命令行套件参数初始化，由于我们直接指定的是xml内容，所以这里什么都没做
 		initializeCommandLineSuitesParams();
+		
+		// 命令行套件组别初始化，由于我们直接指定的是xml内容，所以这里什么都没做
 		initializeCommandLineSuitesGroups();
 
+		// 准备执行单元测试前做一遍完整性检查。保证需要的环境和数据都准备好了。
+		// 如果没准备好，会抛出异常。
+		// 主要是判断XmlSuite中的名字是否唯一。
 		sanityCheck();
 
 		List<ISuite> suiteRunners = null;
 
+		// 启动，什么都没做? 默认过去的list和listner都是空? TODO
 		runExecutionListeners(true /* start */);
 
 		m_start = System.currentTimeMillis();
-
-		//
-		// Slave mode
-		//
+ 
 		if (m_slavefileName != null) {
+			//
+			// Slave mode
+			//
 			SuiteSlave slave = new SuiteSlave(m_slavefileName, this);
 			slave.waitForSuites();
-		}
-
-		//
-		// Regular mode
-		//
-		else if (m_masterfileName == null) {
+		} else if (m_masterfileName == null) {
+			// 这里是实际跑单元测试的地方  runSuitesLocally()方法
+			// Regular mode 
+			//
 			suiteRunners = runSuitesLocally();
-		}
-
-		//
-		// Master mode
-		//
-		else {
+		} else {
+			//
+			// Master mode
+			//
 			SuiteDispatcher dispatcher = new SuiteDispatcher(m_masterfileName);
 			suiteRunners = dispatcher.dispatch(getConfiguration(), m_suites,
 					getOutputDirectory(), getTestListeners());
@@ -1121,15 +1181,15 @@ public class TestNG {
 				usage();
 			}
 		}
-	}
-
-	private void p(String string) {
-		System.out.println("[TestNG] " + string);
-	}
-
+	} 
+	 
+	/**
+	 * 太搓B了， 用这个start参数来控制启动的正常和失败。
+	 * 
+	 * @param start
+	 */
 	private void runExecutionListeners(boolean start) {
-		for (List<IExecutionListener> listeners : Arrays.asList(
-				m_executionListeners, m_configuration.getExecutionListeners())) {
+		for (List<IExecutionListener> listeners : Arrays.asList(m_executionListeners, m_configuration.getExecutionListeners())) {
 			for (IExecutionListener l : listeners) {
 				if (start)
 					l.onExecutionStart();
@@ -1179,7 +1239,7 @@ public class TestNG {
 			// configuration issues.
 			// Create a map with XmlSuite as key and corresponding SuiteRunner
 			// as value
-			for (XmlSuite xmlSuite : m_suites) {
+			for (XmlSuite xmlSuite : m_suites) {   // 这个地方我检测到实例化了对象!
 				createSuiteRunners(suiteRunnerMap, xmlSuite);
 			}
 
@@ -1188,7 +1248,7 @@ public class TestNG {
 			//
 			if (m_suiteThreadPoolSize == 1 && !m_randomizeSuites) {
 				// Single threaded and not randomized: run the suites in order
-				for (XmlSuite xmlSuite : m_suites) {
+				for (XmlSuite xmlSuite : m_suites) {			// 这个循环是实际执行用例的地方!
 					runSuitesSequentially(xmlSuite, suiteRunnerMap,
 							getVerbose(xmlSuite), getDefaultSuiteName());
 				}
@@ -1424,19 +1484,27 @@ public class TestNG {
 		}
 
 		//
-		// Parse the arguments
+		// Parse the arguments(参数解析)
 		//
 		try {
+			// 命令行参数解析对象，用到了开源组件JCommander
 			CommandLineArgs cla = new CommandLineArgs();
+			
+			// 根据命令行传入参数解析为JCommander对象
 			m_jCommander = new JCommander(cla, argv);
+			
+			// 校验命令行参数 TODO  
+			// 这句不应该在m_jCommander = new JCommander(cla, argv)之前才对么
 			validateCommandLineParameters(cla);
+			
+			// 根据传入的命令行参数配置TestNG。
 			result.configure(cla);
 		} catch (ParameterException ex) {
 			exitWithError(ex.getMessage());
 		}
 
 		//
-		// Run
+		// Run(最核心的启动部分)
 		//
 		try {
 			result.run();
@@ -1567,7 +1635,8 @@ public class TestNG {
 		if (cla.commandLineMethods.size() > 0) {
 			m_commandLineMethods = cla.commandLineMethods;
 		}
-
+		
+		// 一个最基本的配置，suiteFiles是必须有的。
 		if (cla.suiteFiles != null) {
 			setTestSuites(cla.suiteFiles);
 		}
@@ -1602,8 +1671,7 @@ public class TestNG {
 	 * the new configure(CommandLineArgs) method.
 	 * 
 	 * @deprecated use new configure(CommandLineArgs) method
-	 */
-	@SuppressWarnings({ "unchecked" })
+	 */ 
 	@Deprecated
 	public void configure(Map cmdLineArgs) {
 		CommandLineArgs result = new CommandLineArgs();
@@ -1795,6 +1863,8 @@ public class TestNG {
 	}
 
 	/**
+	 * 检查命令行参数的传入是否有效
+	 * 
 	 * Double check that the command line parameters are valid.
 	 */
 	protected static void validateCommandLineParameters(CommandLineArgs args) {
@@ -1866,6 +1936,7 @@ public class TestNG {
 		return m_outputDir;
 	}
 
+	// 获取当前的注释转换器
 	public IAnnotationTransformer getAnnotationTransformer() {
 		return m_annotationTransformer;
 	}
@@ -1964,13 +2035,25 @@ public class TestNG {
 		m_status |= HAS_SKIPPED;
 	}
 
+	/**
+	 * 字面意思貌似是强行退出时候的监听器，做对应的处理 TODO
+	 * 
+	 * @date 2014-5-14 上午10:36:23
+	 *
+	 */
 	public static class ExitCodeListener implements IResultListener2 {
 		private TestNG m_mainRunner;
 
 		public ExitCodeListener() {
 			m_mainRunner = TestNG.m_instance;
 		}
-
+		
+		/**
+		 * 构造器传入TestNG启动对象，可能需要在特定场景对核心
+		 * 启动对象做操作
+		 * 
+		 * @param runner
+		 */
 		public ExitCodeListener(TestNG runner) {
 			m_mainRunner = runner;
 		}
@@ -1981,41 +2064,60 @@ public class TestNG {
 
 		@Override
 		public void onTestFailure(ITestResult result) {
+			// 都失败了为什么还要设置测试用例在跑? TODO
 			setHasRunTests();
+			
+			// 传递一个测试失败的状态
 			m_mainRunner.setStatus(HAS_FAILURE);
 		}
 
 		@Override
 		public void onTestSkipped(ITestResult result) {
+			// 设置测试用例状态在跑中
 			setHasRunTests();
+			
+			// 传递一个测试跳过的状态
 			m_mainRunner.setStatus(HAS_SKIPPED);
 		}
 
+		/**
+		 * 这个方法的含义没太懂 TODO
+		 */
 		@Override
 		public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
+			// 设置测试用例状态在跑中
 			setHasRunTests();
+			
+			// 传递一个FSP的状态
 			m_mainRunner.setStatus(HAS_FSP);
 		}
 
 		@Override
 		public void onTestSuccess(ITestResult result) {
+			// 设置测试用例状态在跑中
 			setHasRunTests();
 		}
 
 		@Override
 		public void onStart(ITestContext context) {
+			// 设置测试用例状态在跑中
 			setHasRunTests();
 		}
 
 		@Override
 		public void onFinish(ITestContext context) {
 		}
-
+		
 		@Override
 		public void onTestStart(ITestResult result) {
+			// 设置测试用例状态在跑中
 			setHasRunTests();
 		}
 
+		/**
+		 * 设定TestNG的hasTest状态为true
+	     * 应该是代表当前有测试用例在跑
+		 */
 		private void setHasRunTests() {
 			m_mainRunner.m_hasTests = true;
 		}
@@ -2025,6 +2127,7 @@ public class TestNG {
 		 */
 		@Override
 		public void onConfigurationFailure(ITestResult itr) {
+			// 配置出错，设置TestNG状态出错
 			m_mainRunner.setStatus(HAS_FAILURE);
 		}
 
@@ -2033,6 +2136,7 @@ public class TestNG {
 		 */
 		@Override
 		public void onConfigurationSkip(ITestResult itr) {
+			// 配置跳过，设置TestNG状态跳过
 			m_mainRunner.setStatus(HAS_SKIPPED);
 		}
 
