@@ -1,6 +1,5 @@
 package org.testng;
 
-
 import org.testng.internal.ConstructorOrMethod;
 import org.testng.xml.XmlTest;
 
@@ -10,250 +9,273 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Describes a TestNG annotated method and the instance on which it will be invoked.
- *
+ * Describes a TestNG annotated method and the instance on which it will be
+ * invoked.
+ * 
  * This interface is not meant to be implemented by users.
- *
+ * 
  * @author Cedric Beust, May 3, 2004
  */
+@SuppressWarnings("rawtypes")
 public interface ITestNGMethod extends Comparable, Serializable, Cloneable {
 
-  /**
-   * @return The real class on which this method was declared
-   * (can be different from getMethod().getDeclaringClass() if
-   * the test method was defined in a superclass).
-   */
-  Class getRealClass();
+	/**
+	 * @return The real class on which this method was declared (can be
+	 *         different from getMethod().getDeclaringClass() if the test method
+	 *         was defined in a superclass).
+	 */
 
-  ITestClass getTestClass();
+	Class getRealClass();
 
-  /**
-   * Sets the test class having this method. This is not necessarily the declaring class.
-   *
-   * @param cls The test class having this method.
-   */
-  void setTestClass(ITestClass cls);
+	ITestClass getTestClass();
 
-  /**
-   * @return the corresponding Java test method.
-   * @deprecated This method is deprecated and can now return null. Use
-   * getConstructorOrMethod() instead.
-   */
-  @Deprecated
-  Method getMethod();
+	/**
+	 * Sets the test class having this method. This is not necessarily the
+	 * declaring class.
+	 * 
+	 * @param cls
+	 *            The test class having this method.
+	 */
+	void setTestClass(ITestClass cls);
 
-  /**
-   * Returns the method name. This is needed for serialization because
-   * methods are not Serializable.
-   * @return the method name.
-   */
-  String getMethodName();
+	/**
+	 * @return the corresponding Java test method.
+	 * @deprecated This method is deprecated and can now return null. Use
+	 *             getConstructorOrMethod() instead.
+	 */
+	@Deprecated
+	Method getMethod();
 
-  /**
-   * @return All the instances the methods will be invoked upon.
-   * This will typically be an array of one object in the absence
-   * of an @Factory annotation.
-   *
-   * @deprecated Use getInstance().
-   */
-  @Deprecated
-  Object[] getInstances();
+	/**
+	 * Returns the method name. This is needed for serialization because methods
+	 * are not Serializable.
+	 * 
+	 * @return the method name.
+	 */
+	String getMethodName();
 
-  Object getInstance();
+	/**
+	 * @return All the instances the methods will be invoked upon. This will
+	 *         typically be an array of one object in the absence of an @Factory
+	 *         annotation.
+	 * 
+	 * @deprecated Use getInstance().
+	 */
+	@Deprecated
+	Object[] getInstances();
 
-  /**
-   * Needed for serialization.
-   */
-  long[] getInstanceHashCodes();
+	Object getInstance();
 
-  /**
-   * @return The groups this method belongs to, possibly added to the groups
-   * declared on the class.
-   */
-  String[] getGroups();
+	/**
+	 * Needed for serialization.
+	 */
+	long[] getInstanceHashCodes();
 
-  /**
-   * @return The groups this method depends on, possibly added to the groups
-   * declared on the class.
-   */
-  String[] getGroupsDependedUpon();
+	/**
+	 * @return The groups this method belongs to, possibly added to the groups
+	 *         declared on the class.
+	 */
+	String[] getGroups();
 
-  /**
-   * If a group was not found.
-   */
-  String getMissingGroup();
-  public void setMissingGroup(String group);
+	/**
+	 * @return The groups this method depends on, possibly added to the groups
+	 *         declared on the class.
+	 */
+	String[] getGroupsDependedUpon();
 
-  /**
-   * Before and After groups
-   */
-  public String[] getBeforeGroups();
-  public String[] getAfterGroups();
+	/**
+	 * If a group was not found.
+	 */
+	String getMissingGroup();
 
-  /**
-   * @return The methods  this method depends on, possibly added to the methods
-   * declared on the class.
-   */
-  String[] getMethodsDependedUpon();
-  void addMethodDependedUpon(String methodName);
+	public void setMissingGroup(String group);
 
-  /**
-   * @return true if this method was annotated with @Test
-   */
-  boolean isTest();
+	/**
+	 * Before and After groups
+	 */
+	public String[] getBeforeGroups();
 
-  /**
-   * @return true if this method was annotated with @Configuration
-   * and beforeTestMethod = true
-   */
-  boolean isBeforeMethodConfiguration();
+	public String[] getAfterGroups();
 
-  /**
-   * @return true if this method was annotated with @Configuration
-   * and beforeTestMethod = false
-   */
-  boolean isAfterMethodConfiguration();
+	/**
+	 * @return The methods this method depends on, possibly added to the methods
+	 *         declared on the class.
+	 */
+	String[] getMethodsDependedUpon();
 
-  /**
-   * @return true if this method was annotated with @Configuration
-   * and beforeClassMethod = true
-   */
-  boolean isBeforeClassConfiguration();
+	void addMethodDependedUpon(String methodName);
 
-  /**
-   * @return true if this method was annotated with @Configuration
-   * and beforeClassMethod = false
-   */
-  boolean isAfterClassConfiguration();
+	/**
+	 * @return true if this method was annotated with @Test
+	 */
+	boolean isTest();
 
-  /**
-   * @return true if this method was annotated with @Configuration
-   * and beforeSuite = true
-   */
-  boolean isBeforeSuiteConfiguration();
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeTestMethod = true
+	 */
+	boolean isBeforeMethodConfiguration();
 
-  /**
-   * @return true if this method was annotated with @Configuration
-   * and afterSuite = true
-   */
-  boolean isAfterSuiteConfiguration();
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeTestMethod = false
+	 */
+	boolean isAfterMethodConfiguration();
 
-  /**
-   * @return <tt>true</tt> if this method is a @BeforeTest (@Configuration beforeTest=true)
-   */
-  boolean isBeforeTestConfiguration();
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeClassMethod = true
+	 */
+	boolean isBeforeClassConfiguration();
 
-  /**
-   * @return <tt>true</tt> if this method is an @AfterTest (@Configuration afterTest=true)
-   */
-  boolean isAfterTestConfiguration();
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeClassMethod = false
+	 */
+	boolean isAfterClassConfiguration();
 
-  boolean isBeforeGroupsConfiguration();
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeSuite = true
+	 */
+	boolean isBeforeSuiteConfiguration();
 
-  boolean isAfterGroupsConfiguration();
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         afterSuite = true
+	 */
+	boolean isAfterSuiteConfiguration();
 
-  /**
-   * @return The timeout in milliseconds.
-   */
-  long getTimeOut();
-  void setTimeOut(long timeOut);
+	/**
+	 * @return <tt>true</tt> if this method is a @BeforeTest (@Configuration
+	 *         beforeTest=true)
+	 */
+	boolean isBeforeTestConfiguration();
 
-  /**
-   * @return the number of times this method needs to be invoked.
-   */
-  int getInvocationCount();
-  void setInvocationCount(int count);
+	/**
+	 * @return <tt>true</tt> if this method is an @AfterTest (@Configuration
+	 *         afterTest=true)
+	 */
+	boolean isAfterTestConfiguration();
 
-  /**
-   * @return the success percentage for this method (between 0 and 100).
-   */
-  int getSuccessPercentage();
+	boolean isBeforeGroupsConfiguration();
 
-  /**
-   * @return The id of the thread this method was run in.
-   */
-  String getId();
+	boolean isAfterGroupsConfiguration();
 
-  void setId(String id);
+	/**
+	 * @return The timeout in milliseconds.
+	 */
+	long getTimeOut();
 
-  long getDate();
+	void setTimeOut(long timeOut);
 
-  void setDate(long date);
+	/**
+	 * @return the number of times this method needs to be invoked.
+	 */
+	int getInvocationCount();
 
-  /**
-   * Returns if this ITestNGMethod can be invoked from within IClass.
-   */
-  boolean canRunFromClass(IClass testClass);
+	void setInvocationCount(int count);
 
-  /**
-   * @return true if this method is alwaysRun=true
-   */
-  boolean isAlwaysRun();
+	/**
+	 * @return the success percentage for this method (between 0 and 100).
+	 */
+	int getSuccessPercentage();
 
-  /**
-   * @return the number of threads to be used when invoking the method on parallel
-   */
-  int getThreadPoolSize();
+	/**
+	 * @return The id of the thread this method was run in.
+	 */
+	String getId();
 
-  void setThreadPoolSize(int threadPoolSize);
+	void setId(String id);
 
-  boolean getEnabled();
+	long getDate();
 
-  public String getDescription();
+	void setDate(long date);
 
-  public void incrementCurrentInvocationCount();
-  public int getCurrentInvocationCount();
-  public void setParameterInvocationCount(int n);
-  public int getParameterInvocationCount();
+	/**
+	 * Returns if this ITestNGMethod can be invoked from within IClass.
+	 */
+	boolean canRunFromClass(IClass testClass);
 
-  public ITestNGMethod clone();
+	/**
+	 * @return true if this method is alwaysRun=true
+	 */
+	boolean isAlwaysRun();
 
-  public IRetryAnalyzer getRetryAnalyzer();
-  public void setRetryAnalyzer(IRetryAnalyzer retryAnalyzer);
+	/**
+	 * @return the number of threads to be used when invoking the method on
+	 *         parallel
+	 */
+	int getThreadPoolSize();
 
-  public boolean skipFailedInvocations();
-  public void setSkipFailedInvocations(boolean skip);
+	void setThreadPoolSize(int threadPoolSize);
 
-  /**
-   * The time under which all invocationCount methods need to complete by.
-   */
-  public long getInvocationTimeOut();
+	boolean getEnabled();
 
-  public boolean ignoreMissingDependencies();
-  public void setIgnoreMissingDependencies(boolean ignore);
+	public String getDescription();
 
-  /**
-   * Which invocation numbers of this method should be used (only applicable
-   * if it uses a data provider). If this value is an empty list, use all the values
-   * returned from the data provider.  These values are read from the XML file in
-   * the <include invocationNumbers="..."> tag.
-   */
-  public List<Integer> getInvocationNumbers();
-  public void setInvocationNumbers(List<Integer> numbers);
+	public void incrementCurrentInvocationCount();
 
-  /**
-   * The list of invocation numbers that failed, which is only applicable for
-   * methods that have a data provider.
-   */
-  public void addFailedInvocationNumber(int number);
-  public List<Integer> getFailedInvocationNumbers();
+	public int getCurrentInvocationCount();
 
-  /**
-   * The scheduling priority. Lower priorities get scheduled first.
-   */
-  public int getPriority();
-  public void setPriority(int priority);
+	public void setParameterInvocationCount(int n);
 
-  /**
-   * @return the XmlTest this method belongs to.
-   */
-  public XmlTest getXmlTest();
+	public int getParameterInvocationCount();
 
-  ConstructorOrMethod getConstructorOrMethod();
+	public ITestNGMethod clone();
 
-  /**
-   * @return the parameters found in the include tag, if any
-   * @param test
-   */
-  Map<String, String> findMethodParameters(XmlTest test);
+	public IRetryAnalyzer getRetryAnalyzer();
+
+	public void setRetryAnalyzer(IRetryAnalyzer retryAnalyzer);
+
+	public boolean skipFailedInvocations();
+
+	public void setSkipFailedInvocations(boolean skip);
+
+	/**
+	 * The time under which all invocationCount methods need to complete by.
+	 */
+	public long getInvocationTimeOut();
+
+	public boolean ignoreMissingDependencies();
+
+	public void setIgnoreMissingDependencies(boolean ignore);
+
+	/**
+	 * Which invocation numbers of this method should be used (only applicable
+	 * if it uses a data provider). If this value is an empty list, use all the
+	 * values returned from the data provider. These values are read from the
+	 * XML file in the <include invocationNumbers="..."> tag.
+	 */
+	public List<Integer> getInvocationNumbers();
+
+	public void setInvocationNumbers(List<Integer> numbers);
+
+	/**
+	 * The list of invocation numbers that failed, which is only applicable for
+	 * methods that have a data provider.
+	 */
+	public void addFailedInvocationNumber(int number);
+
+	public List<Integer> getFailedInvocationNumbers();
+
+	/**
+	 * The scheduling priority. Lower priorities get scheduled first.
+	 */
+	public int getPriority();
+
+	public void setPriority(int priority);
+
+	/**
+	 * @return the XmlTest this method belongs to.
+	 */
+	public XmlTest getXmlTest();
+
+	ConstructorOrMethod getConstructorOrMethod();
+
+	/**
+	 * @return the parameters found in the include tag, if any
+	 * @param test
+	 */
+	Map<String, String> findMethodParameters(XmlTest test);
 }

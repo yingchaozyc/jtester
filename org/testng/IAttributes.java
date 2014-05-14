@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Set;
 
 /**
+ * 属性接口。很多开源框架都有类似的功能。
+ * 
  * A trait that is used by all interfaces that lets the user add or remove their
  * own attributes.
  */
