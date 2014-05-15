@@ -1147,21 +1147,17 @@ public class TestNG {
 
 		m_start = System.currentTimeMillis();
  
-		if (m_slavefileName != null) {
-			//
-			// Slave mode
-			//
+		// TODO 这个值什么时候设置
+		if (m_slavefileName != null) { 
+			// Slave mode 
 			SuiteSlave slave = new SuiteSlave(m_slavefileName, this);
 			slave.waitForSuites();
 		} else if (m_masterfileName == null) {
 			// 这里是实际跑单元测试的地方  runSuitesLocally()方法
-			// Regular mode 
-			//
+			// Regular mode  
 			suiteRunners = runSuitesLocally();
-		} else {
-			//
-			// Master mode
-			//
+		} else { 
+			// Master mode 
 			SuiteDispatcher dispatcher = new SuiteDispatcher(m_masterfileName);
 			suiteRunners = dispatcher.dispatch(getConfiguration(), m_suites,
 					getOutputDirectory(), getTestListeners());
@@ -1225,32 +1221,41 @@ public class TestNG {
 	}
 
 	/**
+	 * 这个方法公开给Maven? maven插件以后调用这个方法就可以了? TODO
+	 * 
 	 * This needs to be public for maven2, for now..At least until an
 	 * alternative mechanism is found.
 	 */
 	public List<ISuite> runSuitesLocally() {
 		SuiteRunnerMap suiteRunnerMap = new SuiteRunnerMap();
 		if (m_suites.size() > 0) {
-			if (m_suites.get(0).getVerbose() >= 2) {		 // 默认的suite的verbose值是1.
+			 // 默认的suite的verbose值是1. verbose代表什么含义? TODO
+			if (m_suites.get(0).getVerbose() >= 2) {		
 				Version.displayBanner();
 			}
 
+			// 实例化对象，TestNG相关实例初始化 
+			//
 			// First initialize the suite runners to ensure there are no
 			// configuration issues.
 			// Create a map with XmlSuite as key and corresponding SuiteRunner
 			// as value
-			for (XmlSuite xmlSuite : m_suites) {   // 这个地方我检测到实例化了对象!
+			for (XmlSuite xmlSuite : m_suites) {    
 				createSuiteRunners(suiteRunnerMap, xmlSuite);
 			}
 
-			//
+			// m_suiteThreadPoolSize默认是1(可以命令行传入进行改变)
+			// m_randomizeSuites默认是false。
 			// Run suites
 			//
 			if (m_suiteThreadPoolSize == 1 && !m_randomizeSuites) {
 				// Single threaded and not randomized: run the suites in order
 				for (XmlSuite xmlSuite : m_suites) {			// 这个循环是实际执行用例的地方!
-					runSuitesSequentially(xmlSuite, suiteRunnerMap,
-							getVerbose(xmlSuite), getDefaultSuiteName());
+					runSuitesSequentially(
+							xmlSuite,
+							suiteRunnerMap,
+							getVerbose(xmlSuite),
+							getDefaultSuiteName());
 				}
 			} else {
 				// Multithreaded: generate a dynamic graph that stores the suite
@@ -1325,14 +1330,24 @@ public class TestNG {
 	 * @param defaultSuiteName
 	 *            default suite name
 	 */
-	private void runSuitesSequentially(XmlSuite xmlSuite,
-			SuiteRunnerMap suiteRunnerMap, int verbose, String defaultSuiteName) {
+	private void runSuitesSequentially(
+			XmlSuite xmlSuite,
+			SuiteRunnerMap suiteRunnerMap, 
+			int verbose, 
+			String defaultSuiteName) {
+		// 最简单的例子里边xmlSuite.getChildSuites()是空集合，所以会跳过
 		for (XmlSuite childSuite : xmlSuite.getChildSuites()) {
-			runSuitesSequentially(childSuite, suiteRunnerMap, verbose,
+			runSuitesSequentially(
+					childSuite, 
+					suiteRunnerMap,
+					verbose,
 					defaultSuiteName);
 		}
+		
 		SuiteRunnerWorker srw = new SuiteRunnerWorker(
-				suiteRunnerMap.get(xmlSuite), suiteRunnerMap, verbose,
+				suiteRunnerMap.get(xmlSuite),
+				suiteRunnerMap, 
+				verbose,
 				defaultSuiteName);
 		srw.run();
 	}

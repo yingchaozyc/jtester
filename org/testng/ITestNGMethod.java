@@ -20,25 +20,42 @@ import java.util.Map;
 public interface ITestNGMethod extends Comparable, Serializable, Cloneable {
 
 	/**
+	 * 获取到方法对应的实际Class。 和Class.getDeclaringClass()还是有不同的。
+	 * 
+	 * class B extends A{}
+	 * 
+	 * 假设A里边有单元测试  那么根据B而来的数据如下：
+	 * RealClass：		A
+	 * DeclaringClass： B
+	 * 
 	 * @return The real class on which this method was declared (can be
-	 *         different from getMethod().getDeclaringClass() if the test method
-	 *         was defined in a superclass).
+	 *          different from getMethod().getDeclaringClass() if the test method
+	 *          was defined in a superclass). 
 	 */
-
 	Class getRealClass();
 
+	/**
+	 * 获取包装后的ITestClass类
+	 * 
+	 * @return
+	 */
 	ITestClass getTestClass();
 
 	/**
+	 * 设置包装类ITestClass。 这个也要公开?有点危险啊。FIXME
+	 * 
 	 * Sets the test class having this method. This is not necessarily the
 	 * declaring class.
 	 * 
-	 * @param cls
-	 *            The test class having this method.
+	 * @param cls  The test class having this method.
 	 */
 	void setTestClass(ITestClass cls);
 
 	/**
+	 * 得到当前执行的这个方法对应的java反射类。
+	 * 
+	 * PS: 已经过期。后续建议调用getConstructorOrMethod()。
+	 * 
 	 * @return the corresponding Java test method.
 	 * @deprecated This method is deprecated and can now return null. Use
 	 *             getConstructorOrMethod() instead.
@@ -47,6 +64,8 @@ public interface ITestNGMethod extends Comparable, Serializable, Cloneable {
 	Method getMethod();
 
 	/**
+	 * 返回方法名称。(这里需要序列化?什么意思??TODO)
+	 * 
 	 * Returns the method name. This is needed for serialization because methods
 	 * are not Serializable.
 	 * 
@@ -55,6 +74,8 @@ public interface ITestNGMethod extends Comparable, Serializable, Cloneable {
 	String getMethodName();
 
 	/**
+	 * 返回调用者的数组 TODO
+	 * 
 	 * @return All the instances the methods will be invoked upon. This will
 	 *         typically be an array of one object in the absence of an @Factory
 	 *         annotation.
@@ -64,9 +85,16 @@ public interface ITestNGMethod extends Comparable, Serializable, Cloneable {
 	@Deprecated
 	Object[] getInstances();
 
+	/**
+	 * 返回调用者。这里怎么又成一个了? TODO
+	 * 
+	 * @return
+	 */
 	Object getInstance();
 
 	/**
+	 * 不明 TODO
+	 * 
 	 * Needed for serialization.
 	 */
 	long[] getInstanceHashCodes();
@@ -109,58 +137,6 @@ public interface ITestNGMethod extends Comparable, Serializable, Cloneable {
 	 * @return true if this method was annotated with @Test
 	 */
 	boolean isTest();
-
-	/**
-	 * @return true if this method was annotated with @Configuration and
-	 *         beforeTestMethod = true
-	 */
-	boolean isBeforeMethodConfiguration();
-
-	/**
-	 * @return true if this method was annotated with @Configuration and
-	 *         beforeTestMethod = false
-	 */
-	boolean isAfterMethodConfiguration();
-
-	/**
-	 * @return true if this method was annotated with @Configuration and
-	 *         beforeClassMethod = true
-	 */
-	boolean isBeforeClassConfiguration();
-
-	/**
-	 * @return true if this method was annotated with @Configuration and
-	 *         beforeClassMethod = false
-	 */
-	boolean isAfterClassConfiguration();
-
-	/**
-	 * @return true if this method was annotated with @Configuration and
-	 *         beforeSuite = true
-	 */
-	boolean isBeforeSuiteConfiguration();
-
-	/**
-	 * @return true if this method was annotated with @Configuration and
-	 *         afterSuite = true
-	 */
-	boolean isAfterSuiteConfiguration();
-
-	/**
-	 * @return <tt>true</tt> if this method is a @BeforeTest (@Configuration
-	 *         beforeTest=true)
-	 */
-	boolean isBeforeTestConfiguration();
-
-	/**
-	 * @return <tt>true</tt> if this method is an @AfterTest (@Configuration
-	 *         afterTest=true)
-	 */
-	boolean isAfterTestConfiguration();
-
-	boolean isBeforeGroupsConfiguration();
-
-	boolean isAfterGroupsConfiguration();
 
 	/**
 	 * @return The timeout in milliseconds.
@@ -278,4 +254,58 @@ public interface ITestNGMethod extends Comparable, Serializable, Cloneable {
 	 * @param test
 	 */
 	Map<String, String> findMethodParameters(XmlTest test);
+	
+
+	//--------------------------------------------------一些方便的注解判断，开始------------------------------------------------------------
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeTestMethod = true
+	 */
+	boolean isBeforeMethodConfiguration();
+
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeTestMethod = false
+	 */
+	boolean isAfterMethodConfiguration();
+
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeClassMethod = true
+	 */
+	boolean isBeforeClassConfiguration();
+
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeClassMethod = false
+	 */
+	boolean isAfterClassConfiguration();
+
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         beforeSuite = true
+	 */
+	boolean isBeforeSuiteConfiguration();
+
+	/**
+	 * @return true if this method was annotated with @Configuration and
+	 *         afterSuite = true
+	 */
+	boolean isAfterSuiteConfiguration();
+
+	/**
+	 * @return <tt>true</tt> if this method is a @BeforeTest (@Configuration
+	 *         beforeTest=true)
+	 */
+	boolean isBeforeTestConfiguration();
+
+	/**
+	 * @return <tt>true</tt> if this method is an @AfterTest (@Configuration
+	 *         afterTest=true)
+	 */
+	boolean isAfterTestConfiguration();
+
+	boolean isBeforeGroupsConfiguration();
+
+	boolean isAfterGroupsConfiguration(); 
 }

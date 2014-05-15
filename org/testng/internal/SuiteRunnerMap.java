@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * SuiteRunner映射集合。
+ * SuiteRunner映射集合。key: xmlSuite.getName()  value: SuiteRunner(ISuite)
  * 
  * @date 2014-5-14 下午2:16:48
  *

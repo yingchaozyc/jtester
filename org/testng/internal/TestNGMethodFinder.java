@@ -36,7 +36,8 @@ public class TestNGMethodFinder implements ITestMethodFinder {
 	private RunInfo m_runInfo = null;
 	private IAnnotationFinder m_annotationFinder = null;
 
-	public TestNGMethodFinder(RunInfo runInfo,
+	public TestNGMethodFinder(
+			RunInfo runInfo,
 			IAnnotationFinder annotationFinder) {
 		m_runInfo = runInfo;
 		m_annotationFinder = annotationFinder;
@@ -98,15 +99,15 @@ public class TestNGMethodFinder implements ITestMethodFinder {
 		return findConfiguration(clazz, AFTER_GROUPS);
 	}
 
-	private ITestNGMethod[] findConfiguration(final Class clazz,
+	private ITestNGMethod[] findConfiguration(
+			final Class clazz,
 			final int configurationType) {
 		List<ITestNGMethod> vResult = Lists.newArrayList();
 
 		Set<Method> methods = ClassHelper.getAvailableMethods(clazz);
 
 		for (Method m : methods) {
-			IConfigurationAnnotation configuration = AnnotationHelper
-					.findConfiguration(m_annotationFinder, m);
+			IConfigurationAnnotation configuration = AnnotationHelper.findConfiguration(m_annotationFinder, m);
 
 			if (null == configuration) {
 				continue;
@@ -170,10 +171,21 @@ public class TestNGMethodFinder implements ITestMethodFinder {
 			}
 
 			if (create) {
-				addConfigurationMethod(clazz, vResult, m, isBeforeSuite,
-						isAfterSuite, isBeforeTest, isAfterTest, isBeforeClass,
-						isAfterClass, isBeforeTestMethod, isAfterTestMethod,
-						beforeGroups, afterGroups, null); /* @@@ */
+				addConfigurationMethod(
+						clazz, 
+						vResult,
+						m,
+						isBeforeSuite,
+						isAfterSuite, 
+						isBeforeTest, 
+						isAfterTest,
+						isBeforeClass,
+						isAfterClass, 
+						isBeforeTestMethod, 
+						isAfterTestMethod,
+						beforeGroups, 
+						afterGroups, 
+						null); /* @@@ */
 			}
 		}
 

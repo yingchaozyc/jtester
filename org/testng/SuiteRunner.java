@@ -273,6 +273,7 @@ public class SuiteRunner implements ISuite, Serializable,
 
 		IInvoker invoker = null;
 
+		// 获取前置，后置方法
 		// Get the invoker and find all the suite level methods
 		for (TestRunner tr : m_testRunners) {
 			// TODO: Code smell. Invoker should belong to SuiteRunner, not
@@ -295,6 +296,7 @@ public class SuiteRunner implements ISuite, Serializable,
 		// a <file-suite> tag and no real tests)
 		//
 		if (invoker != null) {
+			// 如果有前置方法，调用之
 			if (beforeSuiteMethods.values().size() > 0) {
 				invoker.invokeConfigurations(null, beforeSuiteMethods.values()
 						.toArray(new ITestNGMethod[beforeSuiteMethods.size()]),
@@ -311,7 +313,7 @@ public class SuiteRunner implements ISuite, Serializable,
 
 			//
 			// Run all the test runners
-			//
+			// 是否是用并行的方式去跑用例
 			boolean testsInParallel = XmlSuite.PARALLEL_TESTS.equals(m_suite
 					.getParallel());
 			if (!testsInParallel) {
@@ -329,7 +331,7 @@ public class SuiteRunner implements ISuite, Serializable,
 
 			//
 			// Invoke afterSuite methods
-			//
+			// 后置方法调用
 			if (afterSuiteMethods.values().size() > 0) {
 				invoker.invokeConfigurations(null, afterSuiteMethods.values()
 						.toArray(new ITestNGMethod[afterSuiteMethods.size()]),
@@ -354,6 +356,9 @@ public class SuiteRunner implements ISuite, Serializable,
 		return m_reporters;
 	}
 
+	/**
+	 * 顺序执行测试用例
+	 */
 	private void runSequentially() {
 		for (TestRunner tr : m_testRunners) {
 			runTest(tr);

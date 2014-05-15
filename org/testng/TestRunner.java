@@ -59,6 +59,7 @@ import com.google.inject.Module;
  * 
  * @author Cedric Beust, Apr 26, 2004
  */
+@SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
 public class TestRunner implements ITestContext, ITestResultNotifier,
 		IThreadWorkerFactory<ITestNGMethod> {
 	/* generated */
@@ -153,14 +154,9 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 			XmlTest test, String outputDirectory, IAnnotationFinder finder,
 			boolean skipFailedInvocationCounts,
 			List<IInvokedMethodListener> invokedMethodListeners) {
-		
-		init(configuration,
-			 suite, 
-			 test, 
-			 outputDirectory,
-			 finder,
-			 skipFailedInvocationCounts, 
-			 invokedMethodListeners);
+
+		init(configuration, suite, test, outputDirectory, finder,
+				skipFailedInvocationCounts, invokedMethodListeners);
 	}
 
 	public TestRunner(IConfiguration configuration, ISuite suite, XmlTest test,
@@ -171,13 +167,10 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 				listeners);
 	}
 
-	private void init(IConfiguration configuration,
-						ISuite suite, 
-						XmlTest test,
-						String outputDirectory,
-						IAnnotationFinder annotationFinder,
-						boolean skipFailedInvocationCounts,
-						List<IInvokedMethodListener> invokedMethodListeners) {
+	private void init(IConfiguration configuration, ISuite suite, XmlTest test,
+			String outputDirectory, IAnnotationFinder annotationFinder,
+			boolean skipFailedInvocationCounts,
+			List<IInvokedMethodListener> invokedMethodListeners) {
 		m_configuration = configuration;
 		m_xmlTest = test;
 		m_suite = suite;
@@ -187,7 +180,8 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		m_skipFailedInvocationCounts = skipFailedInvocationCounts;
 		setVerbose(test.getVerbose());
 
-		boolean preserveOrder = "true".equalsIgnoreCase(test.getPreserveOrder());
+		boolean preserveOrder = "true"
+				.equalsIgnoreCase(test.getPreserveOrder());
 		m_methodInterceptor = preserveOrder ? new PreserveOrderMethodInterceptor()
 				: new InstanceOrderingMethodInterceptor();
 
@@ -200,14 +194,11 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 
 		m_annotationFinder = annotationFinder;
 		m_invokedMethodListeners = invokedMethodListeners;
-		
+
 		// invoker是负责单元测试方法调用的。初始化赋值。
-		m_invoker = new Invoker(m_configuration,
-								this, 
-								this,
-								m_suite.getSuiteState(),
-								m_skipFailedInvocationCounts,
-								invokedMethodListeners);
+		m_invoker = new Invoker(m_configuration, this, this,
+				m_suite.getSuiteState(), m_skipFailedInvocationCounts,
+				invokedMethodListeners);
 
 		if (suite.getParallel() != null) {
 			log(3, "Running the tests in '" + test.getName()
@@ -244,7 +235,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 	 * 初始化过程
 	 */
 	private void init() {
-		initMetaGroups(m_xmlTest);		// 简单的例子这里没跑
+		initMetaGroups(m_xmlTest); // 简单的例子这里没跑
 		initRunInfo(m_xmlTest);
 
 		// Init methods and class map
@@ -265,7 +256,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 	/**
 	 * @return all the @Listeners annotations found in the current class and its
 	 *         superclasses.
-	 */
+	 */ 
 	private ListenerHolder findAllListeners(Class<?> cls) {
 		ListenerHolder result = new ListenerHolder();
 		result.listenerClasses = Lists.newArrayList();
@@ -399,8 +390,10 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 
 	private void initRunInfo(final XmlTest xmlTest) {
 		// Groups 简单例子这边等于什么都没做
-		m_xmlMethodSelector.setIncludedGroups(createGroups(m_xmlTest.getIncludedGroups()));
-		m_xmlMethodSelector.setExcludedGroups(createGroups(m_xmlTest.getExcludedGroups()));
+		m_xmlMethodSelector.setIncludedGroups(createGroups(m_xmlTest
+				.getIncludedGroups()));
+		m_xmlMethodSelector.setExcludedGroups(createGroups(m_xmlTest
+				.getExcludedGroups()));
 		m_xmlMethodSelector.setExpression(m_xmlTest.getExpression());
 
 		// Methods
@@ -412,7 +405,8 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		// ignore
 		// script selectors here)
 		if (null != xmlTest.getMethodSelectors()) {
-			for (org.testng.xml.XmlMethodSelector selector : xmlTest.getMethodSelectors()) {
+			for (org.testng.xml.XmlMethodSelector selector : xmlTest
+					.getMethodSelectors()) {
 				if (selector.getClassName() != null) {
 					IMethodSelector s = ClassHelper.createSelector(selector);
 
@@ -422,7 +416,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		}
 	}
 
-	private void initMethods() { 
+	private void initMethods() {
 		// 统计所有我们需要调用的方法列表
 		// Calculate all the methods we need to invoke
 		//
@@ -436,12 +430,15 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 
 		// m_testClassesFromXml中已经包含了需要执行的所有类和方法的信息。
 		// classMap中已经包含了被打散的信息
-		ClassInfoMap classMap = new ClassInfoMap(m_testClassesFromXml); 
-		
+		ClassInfoMap classMap = new ClassInfoMap(m_testClassesFromXml);
+
 		// TestNGClassFinder里边做了太多的事情，头大 TODO
-		m_testClassFinder = new TestNGClassFinder(classMap, null, m_xmlTest, m_configuration, this);
-		
-		ITestMethodFinder testMethodFinder = new TestNGMethodFinder(m_runInfo, m_annotationFinder);
+		m_testClassFinder = new TestNGClassFinder(classMap, null, m_xmlTest,
+				m_configuration, this);
+
+		// TestNGMethodFinder一试一个大坑，头爆了 TODO
+		ITestMethodFinder testMethodFinder = new TestNGMethodFinder(m_runInfo,
+				m_annotationFinder);
 
 		m_runInfo.setTestMethods(testMethods);
 
@@ -453,12 +450,9 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		for (IClass ic : classes) {
 
 			// Create TestClass
-			ITestClass tc = new TestClass(ic, 
-										testMethodFinder,
-										m_annotationFinder,
-										m_runInfo,
-										m_xmlTest,
-										classMap.getXmlClass(ic.getRealClass()));
+			ITestClass tc = new TestClass(ic, testMethodFinder,
+					m_annotationFinder, m_runInfo, m_xmlTest,
+					classMap.getXmlClass(ic.getRealClass()));
 			m_classMap.put(ic.getRealClass(), tc);
 		}
 
@@ -476,16 +470,24 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		//
 		for (ITestClass tc : m_classMap.values()) {
 			fixMethodsWithClass(tc.getTestMethods(), tc, testMethods);
-			fixMethodsWithClass(tc.getBeforeClassMethods(), tc, beforeClassMethods);
+			fixMethodsWithClass(tc.getBeforeClassMethods(), tc,
+					beforeClassMethods);
 			fixMethodsWithClass(tc.getBeforeTestMethods(), tc, null);
 			fixMethodsWithClass(tc.getAfterTestMethods(), tc, null);
-			fixMethodsWithClass(tc.getAfterClassMethods(), tc, afterClassMethods);
-			fixMethodsWithClass(tc.getBeforeSuiteMethods(), tc, beforeSuiteMethods);
-			fixMethodsWithClass(tc.getAfterSuiteMethods(), tc, afterSuiteMethods);
-			fixMethodsWithClass(tc.getBeforeTestConfigurationMethods(), tc, beforeXmlTestMethods);
-			fixMethodsWithClass(tc.getAfterTestConfigurationMethods(), tc, afterXmlTestMethods);
-			fixMethodsWithClass(tc.getBeforeGroupsMethods(), tc, MethodHelper.uniqueMethodList(beforeGroupMethods.values()));
-			fixMethodsWithClass(tc.getAfterGroupsMethods(), tc, MethodHelper.uniqueMethodList(afterGroupMethods.values()));
+			fixMethodsWithClass(tc.getAfterClassMethods(), tc,
+					afterClassMethods);
+			fixMethodsWithClass(tc.getBeforeSuiteMethods(), tc,
+					beforeSuiteMethods);
+			fixMethodsWithClass(tc.getAfterSuiteMethods(), tc,
+					afterSuiteMethods);
+			fixMethodsWithClass(tc.getBeforeTestConfigurationMethods(), tc,
+					beforeXmlTestMethods);
+			fixMethodsWithClass(tc.getAfterTestConfigurationMethods(), tc,
+					afterXmlTestMethods);
+			fixMethodsWithClass(tc.getBeforeGroupsMethods(), tc,
+					MethodHelper.uniqueMethodList(beforeGroupMethods.values()));
+			fixMethodsWithClass(tc.getAfterGroupsMethods(), tc,
+					MethodHelper.uniqueMethodList(afterGroupMethods.values()));
 		}
 
 		//
@@ -503,6 +505,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		m_allTestMethods = MethodHelper.collectAndOrderMethods(testMethods,
 				true /* forTest? */, m_runInfo, m_annotationFinder,
 				false /* unique */, m_excludedMethods);
+
 		m_classMethodMap = new ClassMethodMap(testMethods, m_xmlMethodSelector);
 
 		m_afterXmlTestMethods = MethodHelper.collectAndOrderMethods(
@@ -513,6 +516,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		m_afterSuiteMethods = MethodHelper.collectAndOrderMethods(
 				afterSuiteMethods, false /* forTests */, m_runInfo,
 				m_annotationFinder, true /* unique */, m_excludedMethods);
+
 		// shared group methods
 		m_groupMethods = new ConfigurationGroupMethods(m_allTestMethods,
 				beforeGroupMethods, afterGroupMethods);
@@ -616,11 +620,11 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 	 * listeners - etc...
 	 */
 	public void run() {
-		beforeRun();
+		beforeRun();   // 最后一步没懂
 
 		try {
 			XmlTest test = getTest();
-			if (test.isJUnit()) {
+			if (test.isJUnit()) {	// 没动和JUnit做了什么集成
 				privateRunJUnit(test);
 			} else {
 				privateRun(test);
@@ -731,14 +735,14 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 	 * executor to run them.
 	 */
 	private void privateRun(XmlTest xmlTest) {
-		String parallelMode = xmlTest.getParallel();
+		String parallelMode = xmlTest.getParallel();    // 是否是并行模式 这里一般都是false
 		boolean parallel = XmlSuite.PARALLEL_METHODS.equals(parallelMode)
 				|| "true".equalsIgnoreCase(parallelMode)
 				|| XmlSuite.PARALLEL_CLASSES.equals(parallelMode)
 				|| XmlSuite.PARALLEL_INSTANCES.equals(parallelMode);
 
 		{
-			// parallel
+			// parallel 非并行模式线程数目为1
 			int threadCount = parallel ? xmlTest.getThreadCount() : 1;
 			// Make sure we create a graph based on the intercepted methods,
 			// otherwise an interceptor
@@ -845,7 +849,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		List<IWorker<ITestNGMethod>> result = Lists.newArrayList();
 		// Methods that belong to classes with a sequential=true or
 		// parallel=classes
-		// attribute must all be run in the same worker
+		// attribute must all be run in the same worker 
 		Set<Class> sequentialClasses = Sets.newHashSet();
 		for (ITestNGMethod m : methods) {
 			Class<? extends ITestClass> cls = m.getRealClass();
@@ -932,7 +936,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 
 		return result;
 	}
-
+ 
 	private List<List<IMethodInstance>> createInstances(
 			List<IMethodInstance> methodInstances) {
 		Map<Object, List<IMethodInstance>> map = Maps.newHashMap();
@@ -1521,12 +1525,8 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 
 	public void setVerbose(int n) {
 		m_verbose = n;
-	}
-
-	private void log(String s) {
-		Utils.log("TestRunner", 2, s);
-	}
-
+	} 
+	
 	// ///
 	// Listeners
 	//
