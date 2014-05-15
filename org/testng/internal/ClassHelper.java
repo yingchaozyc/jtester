@@ -26,7 +26,8 @@ import java.util.Vector;
 
 /**
  * Utility class for different class manipulations.
- */
+ */ 
+@SuppressWarnings({"rawtypes", "unused"})
 public final class ClassHelper {
 	private static final String JUNIT_TESTRUNNER = "org.testng.junit.JUnitTestRunner";
 	private static final String JUNIT_4_TESTRUNNER = "org.testng.junit.JUnit4TestRunner";
@@ -71,6 +72,9 @@ public final class ClassHelper {
 	}
 
 	/**
+	 * TestNG 提供的类加载方法。不同的是如果找不到对应的类去加载
+	 * ，他不会抛出ClassNotFound异常，而是返回null。
+	 * 
 	 * Tries to load the specified class using the context ClassLoader or if
 	 * none, than from the default ClassLoader. This method differs from the
 	 * standard class loading methods in that it does not throw an exception if
@@ -83,8 +87,7 @@ public final class ClassHelper {
 	 */
 	public static Class<?> forName(final String className) {
 		Vector<ClassLoader> allClassLoaders = new Vector<ClassLoader>();
-		ClassLoader contextClassLoader = Thread.currentThread()
-				.getContextClassLoader();
+		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		if (contextClassLoader != null) {
 			allClassLoaders.add(contextClassLoader);
 		}
@@ -309,7 +312,7 @@ public final class ClassHelper {
 
 	/**
 	 * Create an instance for the given class.
-	 */
+	 */ 
 	public static Object createInstance(Class<?> declaringClass,
 			Map<Class, IClass> classes, XmlTest xmlTest,
 			IAnnotationFinder finder, ITestObjectFactory objectFactory) {

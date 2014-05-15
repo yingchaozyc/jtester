@@ -100,21 +100,46 @@ public class SuiteRunner implements ISuite, Serializable,
 				null /* test listeners */);
 	}
 
-	protected SuiteRunner(IConfiguration configuration, XmlSuite suite,
-			String outputDir, ITestRunnerFactory runnerFactory,
-			boolean useDefaultListeners, IMethodInterceptor methodInterceptor,
-			List<IInvokedMethodListener> invokedMethodListeners,
-			List<ITestListener> testListeners) {
-		init(configuration, suite, outputDir, runnerFactory,
-				useDefaultListeners, methodInterceptor, invokedMethodListeners,
-				testListeners);
+	/**
+	 * constructor.
+	 * 
+	 * @param configuration
+	 * @param suite
+	 * @param outputDir
+	 * @param runnerFactory
+	 * @param useDefaultListeners
+	 * @param methodInterceptor
+	 * @param invokedMethodListeners
+	 * @param testListeners
+	 */
+	protected SuiteRunner(IConfiguration configuration, 
+						   XmlSuite suite,
+						   String outputDir, 
+						   ITestRunnerFactory runnerFactory,
+						   boolean useDefaultListeners, 
+						   IMethodInterceptor methodInterceptor,
+						   List<IInvokedMethodListener> invokedMethodListeners,
+						   List<ITestListener> testListeners) {
+		
+		init(configuration, 
+			 suite, 
+			 outputDir,
+			 runnerFactory,
+			 useDefaultListeners,
+			 methodInterceptor, 
+			 invokedMethodListeners,
+			 testListeners); 
 	}
 
-	private void init(IConfiguration configuration, XmlSuite suite,
-			String outputDir, ITestRunnerFactory runnerFactory,
-			boolean useDefaultListeners, IMethodInterceptor methodInterceptor,
-			List<IInvokedMethodListener> invokedMethodListener,
-			List<ITestListener> testListeners) {
+	private void init(IConfiguration configuration,
+						XmlSuite suite,
+						String outputDir, 
+						ITestRunnerFactory runnerFactory,
+						boolean useDefaultListeners, 
+						IMethodInterceptor methodInterceptor,
+						List<IInvokedMethodListener> invokedMethodListener,
+						List<ITestListener> testListeners) {
+		
 		m_configuration = configuration;
 		m_suite = suite;
 		m_useDefaultListeners = useDefaultListeners;
@@ -136,12 +161,12 @@ public class SuiteRunner implements ISuite, Serializable,
 		if (null != testListeners) {
 			m_testListeners.addAll(testListeners);
 		}
-		m_runnerFactory = buildRunnerFactory();
+		m_runnerFactory = buildRunnerFactory(); // TODO
 
 		// Order the <test> tags based on their order of appearance in
 		// testng.xml
 		List<XmlTest> xmlTests = m_suite.getTests();
-		Collections.sort(xmlTests, new Comparator<XmlTest>() {
+		Collections.sort(xmlTests, new Comparator<XmlTest>() {  //排序
 			@Override
 			public int compare(XmlTest arg0, XmlTest arg1) {
 				return arg0.getIndex() - arg1.getIndex();
@@ -201,7 +226,8 @@ public class SuiteRunner implements ISuite, Serializable,
 		if (isStringBlank(outputdir) && m_useDefaultListeners) {
 			outputdir = DEFAULT_OUTPUT_DIR;
 		}
-
+		// 设置输出目录为绝对路径，比如outputdir=test-output
+		// 解析转换后变为D:\software\eclipse_indigo\workspace\jtester\test-output
 		m_outputDir = (null != outputdir) ? new File(outputdir)
 				.getAbsolutePath() : null;
 	}
@@ -529,9 +555,14 @@ public class SuiteRunner implements ISuite, Serializable,
 			if (!skip) {
 				skip = test.skipFailedInvocationCounts();
 			}
-			TestRunner testRunner = new TestRunner(m_configuration, suite,
-					test, suite.getOutputDirectory(),
-					suite.getAnnotationFinder(), skip, listeners);
+			TestRunner testRunner = new TestRunner(
+					m_configuration,
+					suite,
+					test,
+					suite.getOutputDirectory(),
+					suite.getAnnotationFinder(), 
+					skip,
+					listeners);
 
 			if (m_useDefaultListeners) {
 				testRunner.addListener(new TestHTMLReporter());

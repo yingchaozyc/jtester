@@ -138,7 +138,7 @@ public class TestNG {
 	private String[] m_includedGroups;
 	private String[] m_excludedGroups;
 
-	private Boolean m_isJUnit = XmlSuite.DEFAULT_JUNIT;
+	private Boolean m_isJUnit = XmlSuite.DEFAULT_JUNIT;	// 这两个参数到底想表达什么
 	private Boolean m_isMixed = XmlSuite.DEFAULT_MIXED;
 
 	// useDefaultListeners 是否使用默认的listener。 init()默认调用过来传入true。
@@ -1231,7 +1231,7 @@ public class TestNG {
 	public List<ISuite> runSuitesLocally() {
 		SuiteRunnerMap suiteRunnerMap = new SuiteRunnerMap();
 		if (m_suites.size() > 0) {
-			if (m_suites.get(0).getVerbose() >= 2) {
+			if (m_suites.get(0).getVerbose() >= 2) {		 // 默认的suite的verbose值是1.
 				Version.displayBanner();
 			}
 
@@ -1379,26 +1379,26 @@ public class TestNG {
 	 */
 	private void createSuiteRunners(SuiteRunnerMap suiteRunnerMap /* OUT */,
 			XmlSuite xmlSuite) {
-		if (null != m_isJUnit && !m_isJUnit.equals(XmlSuite.DEFAULT_JUNIT)) {
+		if (null != m_isJUnit && !m_isJUnit.equals(XmlSuite.DEFAULT_JUNIT)) {  // 非JUNIT 跳过 
 			xmlSuite.setJUnit(m_isJUnit);
 		}
 
 		// If the skip flag was invoked on the command line, it
-		// takes precedence
+		// takes precedence 简单例子里边这里是空
 		if (null != m_skipFailedInvocationCounts) {
 			xmlSuite.setSkipFailedInvocationCounts(m_skipFailedInvocationCounts);
 		}
 
-		// Override the XmlSuite verbose value with the one from TestNG
+		// Override the XmlSuite verbose value with the one from TestNG 简单例子里边这里是空
 		if (m_verbose != null) {
 			xmlSuite.setVerbose(m_verbose);
 		}
 
-		if (null != m_configFailurePolicy) {
+		if (null != m_configFailurePolicy) {	//简单例子里边这里是空
 			xmlSuite.setConfigFailurePolicy(m_configFailurePolicy);
 		}
 
-		for (XmlTest t : xmlSuite.getTests()) {
+		for (XmlTest t : xmlSuite.getTests()) {  // m_methodDescriptors在简单例子里边是空，跳过
 			for (Map.Entry<String, Integer> ms : m_methodDescriptors.entrySet()) {
 				XmlMethodSelector xms = new XmlMethodSelector();
 				xms.setName(ms.getKey());
