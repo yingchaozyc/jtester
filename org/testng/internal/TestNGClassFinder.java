@@ -31,42 +31,56 @@ public class TestNGClassFinder extends BaseClassFinder {
 
 	private Map<Class, List<Object>> m_instanceMap = Maps.newHashMap();
 
-	public TestNGClassFinder(ClassInfoMap cim,
-			Map<Class, List<Object>> instanceMap, XmlTest xmlTest,
-			IConfiguration configuration, ITestContext testContext) {
+	/**
+	 * TestNGClassFinder的构造器。做了很多事情
+	 * 
+	 * @param cim
+	 * @param instanceMap
+	 * @param xmlTest
+	 * @param configuration
+	 * @param testContext
+	 *            从TestRunner过来的调用的话这个testContext就是TestRunner。
+	 */
+	public TestNGClassFinder(
+			ClassInfoMap cim,
+			Map<Class, List<Object>> instanceMap, 
+			XmlTest xmlTest,
+			IConfiguration configuration,
+			ITestContext testContext) {
 		m_testContext = testContext;
 
 		if (null == instanceMap) {
 			instanceMap = Maps.newHashMap();
 		}
 
-		IAnnotationFinder annotationFinder = configuration
-				.getAnnotationFinder();
+		// 从IConfiguration中获取对象工程和注解搜寻器。
+		IAnnotationFinder annotationFinder = configuration.getAnnotationFinder();
 		ITestObjectFactory objectFactory = configuration.getObjectFactory();
 
 		//
+		// 拿到ClassInfoMap中的key集合
 		// Find all the new classes and their corresponding instances
 		//
 		Set<Class<?>> allClasses = cim.getClasses();
-
+		
+		// 整个流程第一次objectFactory准备创建
 		// very first pass is to find ObjectFactory, can't create anything else
 		// until then
 		if (objectFactory == null) {
 			objectFactory = new ObjectFactoryImpl();
-			outer: for (Class cls : allClasses) {
+			outer:
+			for (Class cls : allClasses) {
 				try {
 					if (null != cls) {
-						for (Method m : cls.getMethods()) {
-							IAnnotation a = annotationFinder
-									.findAnnotation(
-											m,
-											org.testng.annotations.IObjectFactoryAnnotation.class);
+						// 反射拿到所有的方法
+						for (Method m : cls.getMethods()) {    
+							// 查看方法上是否有IObjectFactoryAnnotation注解
+							IAnnotation a = annotationFinder.findAnnotation(m, org.testng.annotations.IObjectFactoryAnnotation.class);
 							if (null != a) {
-								if (!ITestObjectFactory.class
-										.isAssignableFrom(m.getReturnType())) {
-									throw new TestNGException("Return type of "
-											+ m + " is not IObjectFactory");
+								if (!ITestObjectFactory.class.isAssignableFrom(m.getReturnType())) {
+									throw new TestNGException("Return type of " + m + " is not IObjectFactory");
 								}
+								
 								try {
 									Object instance = cls.newInstance();
 									if (m.getParameterTypes().length > 0
@@ -104,7 +118,7 @@ public class TestNGClassFinder extends BaseClassFinder {
 			}
 		}
 
-		for (Class cls : allClasses) {
+		for (Class cls : allClasses) {   // com.alibaba.jtester.unit1.Test1
 			if ((null == cls)) {
 				ppp("FOUND NULL CLASS IN FOLLOWING ARRAY:");
 				int i = 0;
@@ -115,23 +129,30 @@ public class TestNGClassFinder extends BaseClassFinder {
 				continue;
 			}
 
+			// 遍历寻找。
+			// 从指定类自身开始一直到他的父类，如果有任何一个类中有TestNG的16种标记，
+			// 则认为当前类就是TestNGClass。
 			if (isTestNGClass(cls, annotationFinder)) {
-				List allInstances = instanceMap.get(cls);
-				Object thisInstance = (null != allInstances) ? allInstances
-						.get(0) : null;
+				List allInstances = instanceMap.get(cls);   // 简单例子是空
+				Object thisInstance = (null != allInstances) ? allInstances.get(0) : null; // 简单例子是空
 
 				// If annotation class and instances are abstract, skip them
-				if ((null == thisInstance)
-						&& Modifier.isAbstract(cls.getModifiers())) {
+				// 给这个工具类点赞~~ java.lang.Modifier
+				if ((null == thisInstance) && Modifier.isAbstract(cls.getModifiers())) {
 					Utils.log("", 5,
 							"[WARN] Found an abstract class with no valid instance attached: "
 									+ cls);
 					continue;
 				}
 
-				IClass ic = findOrCreateIClass(m_testContext, cls,
-						cim.getXmlClass(cls), thisInstance, xmlTest,
-						annotationFinder, objectFactory);
+				IClass ic = findOrCreateIClass(
+						m_testContext,
+						cls,
+						cim.getXmlClass(cls), 
+						thisInstance, 
+						xmlTest,
+						annotationFinder,
+						objectFactory);
 				if (null != ic) {
 					Object[] theseInstances = ic.getInstances(false);
 					if (theseInstances.length == 0) {
@@ -140,17 +161,14 @@ public class TestNGClassFinder extends BaseClassFinder {
 					Object instance = theseInstances[0];
 					putIClass(cls, ic);
 
-					ConstructorOrMethod factoryMethod = ClassHelper
-							.findDeclaredFactoryMethod(cls, annotationFinder);
+					ConstructorOrMethod factoryMethod = ClassHelper.findDeclaredFactoryMethod(cls, annotationFinder);
 					if (factoryMethod != null && factoryMethod.getEnabled()) {
 						FactoryMethod fm = new FactoryMethod( /* cls, */
 						factoryMethod, instance, xmlTest, annotationFinder,
 								m_testContext);
 						ClassInfoMap moreClasses = new ClassInfoMap();
 
-						{
-							// ppp("INVOKING FACTORY " + fm + " " +
-							// this.hashCode());
+						{ 
 							Object[] instances = fm.invoke();
 
 							//
@@ -163,14 +181,11 @@ public class TestNGClassFinder extends BaseClassFinder {
 								if (instances[0] != null) {
 									Class elementClass = instances[0]
 											.getClass();
-									if (IInstanceInfo.class
-											.isAssignableFrom(elementClass)) {
+									if (IInstanceInfo.class.isAssignableFrom(elementClass)) {
 										for (Object o : instances) {
 											IInstanceInfo ii = (IInstanceInfo) o;
-											addInstance(ii.getInstanceClass(),
-													ii.getInstance());
-											moreClasses.addClass(ii
-													.getInstanceClass());
+											addInstance(ii.getInstanceClass(), ii.getInstance());
+											moreClasses.addClass(ii.getInstanceClass());
 										}
 									} else {
 										for (int i = 0; i < instances.length; i++) {
@@ -229,9 +244,14 @@ public class TestNGClassFinder extends BaseClassFinder {
 	}
 
 	/**
+	 * 遍历寻找。
+	 * 从指定类自身开始一直到他的父类，如果有任何一个类中有TestNG的16种标记，
+	 * 则认为当前类就是TestNGClass。
+	 * 
 	 * @returns true if this class contains TestNG annotations (either on itself
 	 *          or on a superclass).
 	 */
+	@SuppressWarnings("unchecked")
 	public static boolean isTestNGClass(Class c,
 			IAnnotationFinder annotationFinder) {
 		Class[] allAnnotations = AnnotationHelper.getAllAnnotations();

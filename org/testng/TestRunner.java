@@ -437,7 +437,10 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		// m_testClassesFromXml中已经包含了需要执行的所有类和方法的信息。
 		// classMap中已经包含了被打散的信息
 		ClassInfoMap classMap = new ClassInfoMap(m_testClassesFromXml); 
+		
+		// TestNGClassFinder里边做了太多的事情，头大 TODO
 		m_testClassFinder = new TestNGClassFinder(classMap, null, m_xmlTest, m_configuration, this);
+		
 		ITestMethodFinder testMethodFinder = new TestNGMethodFinder(m_runInfo, m_annotationFinder);
 
 		m_runInfo.setTestMethods(testMethods);

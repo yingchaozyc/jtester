@@ -42,11 +42,14 @@ import org.testng.internal.Utils;
  * 
  * @author <a href="mailto:cedric@beust.com">Cedric Beust</a>
  */
-@SuppressWarnings("deprecation")
-public class JDK15TagFactory {
-
-	public <A extends IAnnotation> A createTag(Class<?> cls, Annotation a,
-			Class<A> annotationClass, IAnnotationTransformer transformer) {
+@SuppressWarnings({"deprecation","unchecked"})
+public class JDK15TagFactory { 
+	public <A extends IAnnotation> A createTag(
+			Class<?> cls,
+			Annotation a,
+			Class<A> annotationClass,
+			IAnnotationTransformer transformer) {
+		
 		IAnnotation result = null;
 
 		if (a != null) {
@@ -181,7 +184,7 @@ public class JDK15TagFactory {
 
 		return result;
 	}
- 
+
 	private ConfigurationAnnotation createConfigurationTag(Class<?> cls,
 			Annotation a) {
 		ConfigurationAnnotation result = new ConfigurationAnnotation();
@@ -254,7 +257,7 @@ public class JDK15TagFactory {
 
 		return result;
 	}
- 
+
 	private IAnnotation createExpectedExceptionsTag(Annotation a) {
 		ExpectedExceptionsAnnotation result = new ExpectedExceptionsAnnotation();
 		ExpectedExceptions c = (ExpectedExceptions) a;
@@ -262,7 +265,7 @@ public class JDK15TagFactory {
 
 		return result;
 	}
- 
+
 	private IAnnotation createFactoryTag(Class<?> cls, Annotation a) {
 		FactoryAnnotation result = new FactoryAnnotation();
 		Factory c = (Factory) a;
@@ -286,7 +289,7 @@ public class JDK15TagFactory {
 
 		return result;
 	}
- 
+
 	private IAnnotation createListenersTag(Class<?> cls, Annotation a,
 			IAnnotationTransformer transformer) {
 		ListenersAnnotation result = new ListenersAnnotation();
@@ -295,7 +298,7 @@ public class JDK15TagFactory {
 
 		return result;
 	}
- 
+
 	private IAnnotation createTestTag(Class<?> cls, Annotation a,
 			IAnnotationTransformer transformer) {
 		TestAnnotation result = new TestAnnotation();
@@ -444,10 +447,5 @@ public class JDK15TagFactory {
 			e.printStackTrace();
 		}
 		return result;
-	}
-
-	private void ppp(String string) {
-		System.out.println("[JDK15TagFactory] " + string);
-	}
-
+	} 
 }

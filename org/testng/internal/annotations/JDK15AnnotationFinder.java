@@ -47,10 +47,15 @@ import org.testng.internal.collections.Pair;
  * 
  * @author <a href="mailto:cedric@beust.com">Cedric Beust</a>
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation", "rawtypes", "unchecked"})  
 public class JDK15AnnotationFinder implements IAnnotationFinder {
 	
 	private JDK15TagFactory m_tagFactory = new JDK15TagFactory();
+	
+	// key: 包含了实际的java的注解类和注解在哪儿(类，构造器，方法)的元祖信息
+	// valve: TestNG包装后的注解类
+	private Map<Pair<Annotation, ?>, IAnnotation> m_annotations = Maps
+			.newHashMap();
 	
 	// 注解关系对应map。
 	private Map<Class<? extends IAnnotation>, Class<? extends Annotation>>
@@ -86,7 +91,7 @@ public class JDK15AnnotationFinder implements IAnnotationFinder {
 		m_annotationMap.put(IAfterMethod.class, AfterMethod.class);
 		m_annotationMap.put(IListeners.class, Listeners.class);
 	}
-
+ 
 	private <A extends Annotation> A findAnnotationInSuperClasses(Class cls,
 			Class<A> a) {
 		// Hack for @Listeners: we don't look in superclasses for this
@@ -110,10 +115,9 @@ public class JDK15AnnotationFinder implements IAnnotationFinder {
 	}
 
 	@Override
-	public <A extends IAnnotation> A findAnnotation(Method m,
-			Class<A> annotationClass) {
-		final Class<? extends Annotation> a = m_annotationMap
-				.get(annotationClass);
+	public <A extends IAnnotation> A findAnnotation(Method m, Class<A> annotationClass) {
+		// 从Map中找到对应的注解类
+		final Class<? extends Annotation> a = m_annotationMap.get(annotationClass);
 		if (a == null) {
 			throw new IllegalArgumentException("Java @Annotation class for '"
 					+ annotationClass + "' not found.");
@@ -122,39 +126,35 @@ public class JDK15AnnotationFinder implements IAnnotationFinder {
 				annotationClass, null, null, m);
 	}
 
-	private void transform(IAnnotation a, Class testClass,
-			Constructor testConstructor, Method testMethod) {
-		//
-		// Transform @Test
-		//
+	/**
+	 * 这里很尴尬。TestNG具体是没有实现transform的。所以这段代码等于是没有执行。
+	 * 
+	 * @param a
+	 * @param testClass
+	 * @param testConstructor
+	 * @param testMethod
+	 */
+	private void transform(
+			IAnnotation a,
+			Class testClass,
+			Constructor testConstructor,
+			Method testMethod) { 
+		
 		if (a instanceof ITestAnnotation) {
-			m_transformer.transform((ITestAnnotation) a, testClass,
-					testConstructor, testMethod);
-		}
-
-		else if (m_transformer instanceof IAnnotationTransformer2) {
+			// Transform @Test
+			m_transformer.transform((ITestAnnotation) a, testClass, testConstructor, testMethod);
+		} else if (m_transformer instanceof IAnnotationTransformer2) {
 			IAnnotationTransformer2 transformer2 = (IAnnotationTransformer2) m_transformer;
-
-			//
-			// Transform a configuration annotation
-			//
+ 
 			if (a instanceof IConfigurationAnnotation) {
+				// Transform a configuration annotation
 				IConfigurationAnnotation configuration = (IConfigurationAnnotation) a;
-				transformer2.transform(configuration, testClass,
-						testConstructor, testMethod);
-			}
-
-			//
-			// Transform @DataProvider
-			//
-			else if (a instanceof IDataProviderAnnotation) {
+				transformer2.transform(configuration, testClass, testConstructor, testMethod);
+			} else if (a instanceof IDataProviderAnnotation) {
+				// Transform @DataProvider
 				transformer2.transform((IDataProviderAnnotation) a, testMethod);
-			}
-
-			//
-			// Transform @Factory
-			//
-			else if (a instanceof IFactoryAnnotation) {
+			} else if (a instanceof IFactoryAnnotation) {
+				// Transform @Factory
 				transformer2.transform((IFactoryAnnotation) a, testMethod);
 			}
 		}
@@ -184,14 +184,28 @@ public class JDK15AnnotationFinder implements IAnnotationFinder {
 		}
 		return findAnnotation(cons.getDeclaringClass(), cons.getAnnotation(a),
 				annotationClass, null, cons, null);
-	}
+	} 
 
-	private Map<Pair<Annotation, ?>, IAnnotation> m_annotations = Maps
-			.newHashMap();
-
-	private <A extends IAnnotation> A findAnnotation(Class cls, Annotation a,
-			Class<A> annotationClass, Class testClass,
-			Constructor testConstructor, Method testMethod) {
+	/**
+	 * 
+	 * @param cls
+	 * @param a
+	 * @param annotationClass
+	 * 
+	 * 通过pair的赋值可以看出这三个参数看起来是同级别的
+	 * @param testClass
+	 * @param testConstructor
+	 * @param testMethod
+	 * @return
+	 */
+	private <A extends IAnnotation> A findAnnotation(
+			Class cls,
+			Annotation a,
+			Class<A> annotationClass,
+			Class testClass,
+			Constructor testConstructor,
+			Method testMethod) {
+		
 		final Pair<Annotation, ?> p;
 		if (testClass != null) {
 			p = new Pair<Annotation, Class>(a, testClass);
@@ -200,11 +214,13 @@ public class JDK15AnnotationFinder implements IAnnotationFinder {
 		} else {
 			p = new Pair<Annotation, Method>(a, testMethod);
 		}
+		
 		// noinspection unchecked
+		// 获取TestNG包装后的注解类
 		A result = (A) m_annotations.get(p);
 		if (result == null) {
-			result = m_tagFactory.createTag(cls, a, annotationClass,
-					m_transformer);
+			// 创建对应的Annotation
+			result = m_tagFactory.createTag(cls, a, annotationClass, m_transformer);
 			m_annotations.put(p, result);
 			transform(result, testClass, testConstructor, testMethod);
 		}

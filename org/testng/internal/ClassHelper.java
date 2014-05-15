@@ -492,16 +492,26 @@ public final class ClassHelper {
 		return null;
 	}
 
+	/**
+	 * 尝试利用反射调用单个字符串的构造器，来实例化declaringClass。
+	 * 如果检测到是内部类，直接返回。
+	 * 
+	 * @param declaringClass
+	 * @return
+	 */
 	public static <T> T tryOtherConstructor(Class<T> declaringClass) {
 		T result;
 		try {
 			// Special case for inner classes
+			// Class.getModifiers是获取类修饰符。
+			// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.1-200-E.1
+			// 内部类因为肯定不是public，所以他的modifier只能是0了。
 			if (declaringClass.getModifiers() == 0) {
 				return null;
 			}
 
-			Constructor<T> ctor = declaringClass
-					.getConstructor(new Class[] { String.class });
+			// 调用单字符串参数
+			Constructor<T> ctor = declaringClass.getConstructor(new Class[] { String.class });
 			result = ctor.newInstance(new Object[] { "Default test name" });
 		} catch (Exception e) {
 			String message = e.getMessage();
@@ -516,7 +526,7 @@ public final class ClassHelper {
 		}
 
 		return result;
-	}
+	} 
 
 	/**
 	 * When given a file name to form a class name, the file name is parsed and

@@ -57,8 +57,15 @@ abstract public class BaseClassFinder implements ITestClassFinder {
 										 ITestObjectFactory objectFactory) {
 		IClass result = m_classes.get(cls);
 		if (null == result) {
-			result = new ClassImpl(context, cls, xmlClass, instance, m_classes,
-					xmlTest, annotationFinder, objectFactory);
+			// 只是简单的用一些必要参数去构造一个ClassImpl对象
+			result = new ClassImpl(context,
+								    cls,
+								    xmlClass,
+								    instance, 
+								    m_classes,
+									xmlTest,
+									annotationFinder, 
+									objectFactory);
 			m_classes.put(cls, result);
 		}
 

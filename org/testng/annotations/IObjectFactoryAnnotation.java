@@ -5,6 +5,6 @@ package org.testng.annotations;
  *         Date: Mar 6, 2007
  *         Time: 2:16:13 PM
  */
-public interface IObjectFactoryAnnotation extends IAnnotation
-{
+public interface IObjectFactoryAnnotation extends IAnnotation{
+	
 }

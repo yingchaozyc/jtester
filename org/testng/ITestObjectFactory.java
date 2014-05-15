@@ -3,6 +3,8 @@ package org.testng;
 import java.io.Serializable;
 
 /**
+ * 对象工厂接口。
+ * 
  * Parent interface of all the object factories.
  *
  * @author Cedric Beust <cedric@beust.com>
