@@ -30,8 +30,7 @@ class TestClass extends NoOpTestClass implements ITestClass {
   // The Strategy used to locate test methods (TestNG, JUnit, etc...)
   transient private ITestMethodFinder m_testMethodFinder = null;
 
-  private IClass m_iClass = null;
-  private RunInfo m_runInfo = null;
+  private IClass m_iClass = null; 
   private String m_testName;
   private XmlTest m_xmlTest;
   private XmlClass m_xmlClass;
@@ -78,8 +77,7 @@ class TestClass extends NoOpTestClass implements ITestClass {
     m_iClass = cls;
     m_testClass = cls.getRealClass();
     m_xmlTest = xmlTest;
-    m_xmlClass = xmlClass;
-    m_runInfo = runInfo;
+    m_xmlClass = xmlClass; 
     m_testMethodFinder = testMethodFinder;
     m_annotationFinder = annotationFinder;
     initTestClassesAndInstances();
@@ -199,11 +197,7 @@ class TestClass extends NoOpTestClass implements ITestClass {
 
     ITestNGMethod[] result = vResult.toArray(new ITestNGMethod[vResult.size()]);
     return result;
-  }
-
-  private RunInfo getRunInfo() {
-    return m_runInfo;
-  }
+  } 
 
   public ITestMethodFinder getTestMethodFinder() {
     return m_testMethodFinder;
@@ -211,11 +205,7 @@ class TestClass extends NoOpTestClass implements ITestClass {
 
   private void log(int level, String s) {
     Utils.log("TestClass", level, s);
-  }
-
-  private static void ppp(String s) {
-    System.out.println("[TestClass] " + s);
-  }
+  } 
 
   protected void dump() {
     System.out.println("===== Test class\n" + m_testClass.getName());

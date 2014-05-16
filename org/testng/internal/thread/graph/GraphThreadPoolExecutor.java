@@ -16,139 +16,161 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 批量处理任务的线程池，继承了JUC的ThreadPoolExecutor。DynmaicGraph中存储了
+ * 要跑的任务，IThreadWorkerFactory去创建线程跑这些任务。
+ * 
  * An Executor that launches tasks per batches. It takes a {@code DynamicGraph}
  * of tasks to be run and a {@code IThreadWorkerFactory} to initialize/create
  * {@code Runnable} wrappers around those tasks
  */
+@SuppressWarnings({"unused","unchecked"})
 public class GraphThreadPoolExecutor<T> extends ThreadPoolExecutor {
-  private static final boolean DEBUG = false;
-  /** Set to true if you want to generate GraphViz graphs */
-  private static final boolean DOT_FILES = false;
+	private static final boolean DEBUG = false;
+	
+	// 是否生成GraphViz图
+	/** Set to true if you want to generate GraphViz graphs */
+	private static final boolean DOT_FILES = false;
 
-  private DynamicGraph<T> m_graph;
-  private List<Runnable> m_activeRunnables = Lists.newArrayList();
-  private IThreadWorkerFactory<T> m_factory;
-  private List<String> m_dotFiles = Lists.newArrayList();
-  private int m_threadCount;
+	private List<Runnable> m_activeRunnables = Lists.newArrayList();
+	private List<String> m_dotFiles = Lists.newArrayList(); 
+	
+	// 构造器初始化传入
+	private DynamicGraph<T> m_graph;
+	// 构造器初始化传入
+	private IThreadWorkerFactory<T> m_factory;
+	// 构造器初始化传入
+	private int m_threadCount;
 
-  public GraphThreadPoolExecutor(DynamicGraph<T> graph, IThreadWorkerFactory<T> factory, int corePoolSize,
-      int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
-    super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue
-        /* , new TestNGThreadPoolFactory() */);
-    ppp("Initializing executor with " + corePoolSize + " threads and following graph " + graph);
-    m_threadCount = maximumPoolSize;
-    m_graph = graph;
-    m_factory = factory;
+	public GraphThreadPoolExecutor(DynamicGraph<T> graph,
+			IThreadWorkerFactory<T> factory,
+			int corePoolSize,
+			int maximumPoolSize,
+			long keepAliveTime, 
+			TimeUnit unit,
+			BlockingQueue<Runnable> workQueue) {
+		
+		super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue
+		/* , new TestNGThreadPoolFactory() */);
+		ppp("Initializing executor with " + corePoolSize
+				+ " threads and following graph " + graph);
+		m_threadCount = maximumPoolSize;
+		m_graph = graph;
+		m_factory = factory;
 
-    if (m_graph.getFreeNodes().isEmpty()) {
-      throw new TestNGException("The graph of methods contains a cycle:" + graph.getEdges());
-    }
-  }
+		// 这个异常的判断没有了解。
+		if (m_graph.getFreeNodes().isEmpty()) {
+			throw new TestNGException("The graph of methods contains a cycle:"
+					+ graph.getEdges());
+		}
+	}
 
-  public void run() {
-    synchronized(m_graph) {
-      if (DOT_FILES) {
-        m_dotFiles.add(m_graph.toDot());
-      }
-      List<T> freeNodes = m_graph.getFreeNodes();
-      runNodes(freeNodes);
-    }
-  }
+	public void run() {
+		synchronized (m_graph) {
+			if (DOT_FILES) {
+				m_dotFiles.add(m_graph.toDot());
+			}
+			List<T> freeNodes = m_graph.getFreeNodes();
+			runNodes(freeNodes);
+		}
+	}
 
-  /**
-   * Create one worker per node and execute them.
-   */
-  private void runNodes(List<T> freeNodes) {
-    List<IWorker<T>> runnables = m_factory.createWorkers(freeNodes);
-    for (IWorker<T> r : runnables) {
-      m_activeRunnables.add(r);
-      ppp("Added to active runnable");
-      setStatus(r, Status.RUNNING);
-      ppp("Executing: " + r);
-      try {
-        execute(r);
-//        if (m_threadCount > 1) execute(r);
-//        else r.run();
-      }
-      catch(Exception ex) {
-        ex.printStackTrace();
-      }
-    }
-  }
+	/**
+	 * 针对每个节点生成一个worker并执行它。
+	 * 
+	 * Create one worker per node and execute them.
+	 */
+	private void runNodes(List<T> freeNodes) {
+		List<IWorker<T>> runnables = m_factory.createWorkers(freeNodes);
+		for (IWorker<T> r : runnables) {
+			m_activeRunnables.add(r);
+			ppp("Added to active runnable");
+			setStatus(r, Status.RUNNING);
+			ppp("Executing: " + r);
+			try {
+				execute(r);
+				// if (m_threadCount > 1) execute(r);
+				// else r.run();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
 
-  private void setStatus(IWorker<T> worker, Status status) {
-    ppp("Set status:" + worker + " status:" + status);
-    if (status == Status.FINISHED) {
-      m_activeRunnables.remove(worker);
-    }
-    synchronized(m_graph) {
-      for (T m : worker.getTasks()) {
-        m_graph.setStatus(m, status);
-      }
-    }
-  }
+	private void setStatus(IWorker<T> worker, Status status) {
+		ppp("Set status:" + worker + " status:" + status);
+		if (status == Status.FINISHED) {
+			m_activeRunnables.remove(worker);
+		}
+		synchronized (m_graph) {
+			for (T m : worker.getTasks()) {
+				m_graph.setStatus(m, status);
+			}
+		}
+	}
+ 
+	@Override
+	public void afterExecute(Runnable r, Throwable t) {
+		ppp("Finished runnable:" + r);
+		setStatus((IWorker<T>) r, Status.FINISHED);
+		synchronized (m_graph) {
+			ppp("Node count:" + m_graph.getNodeCount() + " and "
+					+ m_graph.getNodeCountWithStatus(Status.FINISHED)
+					+ " finished");
+			if (m_graph.getNodeCount() == m_graph
+					.getNodeCountWithStatus(Status.FINISHED)) {
+				ppp("Shutting down executor " + this);
+				if (DOT_FILES) {
+					generateFiles(m_dotFiles);
+				}
+				shutdown();
+			} else {
+				if (DOT_FILES) {
+					m_dotFiles.add(m_graph.toDot());
+				}
+				List<T> freeNodes = m_graph.getFreeNodes();
+				runNodes(freeNodes);
+			}
+		}
+		// if (m_activeRunnables.isEmpty() && m_index < m_runnables.getSize()) {
+		// runNodes(m_index++);
+		// }
+	}
 
-  @Override
-  public void afterExecute(Runnable r, Throwable t) {
-    ppp("Finished runnable:" + r);
-    setStatus((IWorker<T>) r, Status.FINISHED);
-    synchronized(m_graph) {
-      ppp("Node count:" + m_graph.getNodeCount() + " and "
-          + m_graph.getNodeCountWithStatus(Status.FINISHED) + " finished");
-      if (m_graph.getNodeCount() == m_graph.getNodeCountWithStatus(Status.FINISHED)) {
-        ppp("Shutting down executor " + this);
-        if (DOT_FILES) {
-          generateFiles(m_dotFiles);
-        }
-        shutdown();
-      } else {
-        if (DOT_FILES) {
-          m_dotFiles.add(m_graph.toDot());
-        }
-        List<T> freeNodes = m_graph.getFreeNodes();
-        runNodes(freeNodes);
-      }
-    }
-//    if (m_activeRunnables.isEmpty() && m_index < m_runnables.getSize()) {
-//      runNodes(m_index++);
-//    }
-  }
+	private void generateFiles(List<String> files) {
+		try {
+			File dir = File.createTempFile("TestNG-", "");
+			dir.delete();
+			dir.mkdir();
+			for (int i = 0; i < files.size(); i++) {
+				File f = new File(dir, "" + (i < 10 ? "0" : "") + i + ".dot");
+				BufferedWriter bw = new BufferedWriter(new FileWriter(f));
+				bw.append(files.get(i));
+				bw.close();
+			}
+			if (DOT_FILES) {
+				System.out.println("Created graph files in " + dir);
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
 
-  private void generateFiles(List<String> files) {
-    try {
-      File dir = File.createTempFile("TestNG-", "");
-      dir.delete();
-      dir.mkdir();
-      for (int i = 0; i < files.size(); i++) {
-        File f = new File(dir, "" + (i < 10 ? "0" : "") + i + ".dot");
-        BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-        bw.append(files.get(i));
-        bw.close();
-      }
-      if (DOT_FILES) {
-        System.out.println("Created graph files in " + dir);
-      }
-    } catch(IOException ex) {
-      ex.printStackTrace();
-    }
-  }
-
-  private void ppp(String string) {
-    if (DEBUG) {
-      System.out.println("============ [GraphThreadPoolExecutor] " + Thread.currentThread().getId() + " "
-          + string);
-    }
-  }
+	private void ppp(String string) {
+		if (DEBUG) {
+			System.out.println("============ [GraphThreadPoolExecutor] "
+					+ Thread.currentThread().getId() + " " + string);
+		}
+	}
 
 }
 
 class TestNGThreadPoolFactory implements ThreadFactory {
-  private int m_count = 0;
+	private int m_count = 0;
 
-  @Override
-  public Thread newThread(Runnable r) {
-    Thread result = new Thread(r);
-    result.setName("TestNG-" + m_count++);
-    return result;
-  }
+	@Override
+	public Thread newThread(Runnable r) {
+		Thread result = new Thread(r);
+		result.setName("TestNG-" + m_count++);
+		return result;
+	}
 }

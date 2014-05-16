@@ -753,13 +753,16 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 			if (parallel) {
 				if (graph.getNodeCount() > 0) {
 					GraphThreadPoolExecutor<ITestNGMethod> executor = new GraphThreadPoolExecutor<ITestNGMethod>(
-							graph, this, threadCount, threadCount, 0,
+							graph, 
+							this, 
+							threadCount, 
+							threadCount,
+							0,
 							TimeUnit.MILLISECONDS,
 							new LinkedBlockingQueue<Runnable>());
 					executor.run();
 					try {
-						long timeOut = m_xmlTest
-								.getTimeOut(XmlTest.DEFAULT_TIMEOUT_MS);
+						long timeOut = m_xmlTest.getTimeOut(XmlTest.DEFAULT_TIMEOUT_MS);
 						Utils.log(
 								"TestRunner",
 								2,
@@ -777,6 +780,8 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 				}
 			} else {
 				boolean debug = false;
+				
+				// 获取要执行的节点列表
 				List<ITestNGMethod> freeNodes = graph.getFreeNodes();
 				if (debug) {
 					System.out.println("Free nodes:" + freeNodes);
@@ -808,8 +813,8 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		if (m_methodInterceptor == null)
 			return methods;
 
-		IMethodInstance[] instances = methodsToMethodInstances(Arrays
-				.asList(methods));
+		// 返回ITestNGMethod对应的实例IMethodInstance
+		IMethodInstance[] instances = methodsToMethodInstances(Arrays.asList(methods));
 
 		List<IMethodInstance> resultInstances = m_methodInterceptor.intercept(
 				Arrays.asList(instances), this);
@@ -1068,9 +1073,10 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		// logResults();
 	}
 
-	private DynamicGraph<ITestNGMethod> createDynamicGraph(
-			ITestNGMethod[] methods) {
+	private DynamicGraph<ITestNGMethod> createDynamicGraph(ITestNGMethod[] methods) {
 		DynamicGraph<ITestNGMethod> result = new DynamicGraph<ITestNGMethod>();
+		
+		// 根据方法优先级排序
 		result.setComparator(new Comparator<ITestNGMethod>() {
 			@Override
 			public int compare(ITestNGMethod o1, ITestNGMethod o2) {
@@ -1094,8 +1100,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 				String[] dependentMethods = m.getMethodsDependedUpon();
 				if (dependentMethods != null) {
 					for (String d : dependentMethods) {
-						ITestNGMethod dm = dependencyMap.getMethodDependingOn(
-								d, m);
+						ITestNGMethod dm = dependencyMap.getMethodDependingOn(d, m);
 						if (m != dm) {
 							result.addEdge(m, dm);
 						}
@@ -1132,13 +1137,11 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		// sequentially.
 		if (!hasDependencies
 				&& !XmlSuite.isParallel(getCurrentXmlTest().getParallel())
-				&& "true".equalsIgnoreCase(getCurrentXmlTest()
-						.getPreserveOrder())) {
+				&& "true".equalsIgnoreCase(getCurrentXmlTest().getPreserveOrder())) {
 			// If preserve-order was specified and the class order is A, B
 			// create a new set of dependencies where each method of B depends
 			// on all the methods of A
-			ListMultiMap<ITestNGMethod, ITestNGMethod> classDependencies = createClassDependencies(
-					methods, getCurrentXmlTest());
+			ListMultiMap<ITestNGMethod, ITestNGMethod> classDependencies = createClassDependencies(methods, getCurrentXmlTest());
 
 			for (Map.Entry<ITestNGMethod, List<ITestNGMethod>> es : classDependencies
 					.getEntrySet()) {

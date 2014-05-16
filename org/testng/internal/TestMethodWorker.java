@@ -106,7 +106,7 @@ public class TestMethodWorker implements IWorker<ITestNGMethod> {
 
       invokeBeforeClassMethods(testClass, testMthdInst);
 
-      // Invoke test method
+      // Invoke test method  CORE!!! INVOKE!
       try {
         invokeTestMethods(testMethod, testMthdInst.getInstances(), m_testContext);
       }

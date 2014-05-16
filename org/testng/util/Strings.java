@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TestNG所用到的工具类
+ * TestNG所用到的字符串工具类
  *
  * @date 2014-5-15 下午4:19:54
  *

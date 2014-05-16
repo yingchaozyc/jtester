@@ -42,8 +42,12 @@ public class SuiteRunnerWorker implements IWorker<ISuite> {
 	 * @param xmlSuite
 	 *            XML suites to run
 	 */
-	private void runSuite(SuiteRunnerMap suiteRunnerMap /* OUT */,
+	private void runSuite(
+			SuiteRunnerMap suiteRunnerMap /* OUT */,
 			XmlSuite xmlSuite) {
+		// verbose的含义:
+		// 执行的输出详细程度。因为testng会输出html格式的测试报告
+		// 。因此该属性决定报告详细程度。程度值由0-10.0是没有，10是最详细。不是必需有的。
 		if (m_verbose > 0) {
 			StringBuffer allFiles = new StringBuffer();
 			allFiles.append("  ")
