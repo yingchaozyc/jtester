@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.testng.annotations.ITestAnnotation;
 import org.testng.collections.ListMultiMap;
 import org.testng.collections.Lists;
 import org.testng.collections.Maps;
@@ -781,20 +782,25 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 			} else {
 				boolean debug = false;
 				
-				// 获取要执行的节点列表
+				// 获取要执行的节点列表 graph.getFreeNodes()这个方法我进行了详尽的分析
+				// 作者的思路很赞。
 				List<ITestNGMethod> freeNodes = graph.getFreeNodes();
+				
+				// 这个地方简直就是扯淡，我怎么才能把debug配置成false? 草。 FIXME
 				if (debug) {
 					System.out.println("Free nodes:" + freeNodes);
 				}
-
+				
+				// 没用可用的节点是不对的
 				if (graph.getNodeCount() > 0 && freeNodes.isEmpty()) {
 					throw new TestNGException("No free nodes found in:" + graph);
 				}
 
 				while (!freeNodes.isEmpty()) {
+					// 获取Worker列表，逐个执行。这里的逻辑灰常复杂。 TODO
 					List<IWorker<ITestNGMethod>> runnables = createWorkers(freeNodes);
 					for (IWorker<ITestNGMethod> r : runnables) {
-						r.run();
+						r.run();  // TestMethodWorker.run()
 					}
 					graph.setStatus(freeNodes, Status.FINISHED);
 					freeNodes = graph.getFreeNodes();
@@ -835,8 +841,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 	 * run in the same thread.
 	 */
 	@Override
-	public List<IWorker<ITestNGMethod>> createWorkers(
-			List<ITestNGMethod> methods) {
+	public List<IWorker<ITestNGMethod>> createWorkers(List<ITestNGMethod> methods) {
 		List<IWorker<ITestNGMethod>> result;
 		if (XmlSuite.PARALLEL_INSTANCES.equals(m_xmlTest.getParallel())) {
 			result = createInstanceBasedParallelWorkers(methods);
@@ -858,16 +863,11 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 		Set<Class> sequentialClasses = Sets.newHashSet();
 		for (ITestNGMethod m : methods) {
 			Class<? extends ITestClass> cls = m.getRealClass();
-			org.testng.annotations.ITestAnnotation test = m_annotationFinder
-					.findAnnotation(cls,
-							org.testng.annotations.ITestAnnotation.class);
+			ITestAnnotation test = m_annotationFinder.findAnnotation(cls, ITestAnnotation.class);
 
 			// If either sequential=true or parallel=classes, mark this class
 			// sequential
-			if (test != null
-					&& (test.getSequential() || test.getSingleThreaded())
-					|| XmlSuite.PARALLEL_CLASSES
-							.equals(m_xmlTest.getParallel())) {
+			if (test != null && (test.getSequential() || test.getSingleThreaded()) || XmlSuite.PARALLEL_CLASSES.equals(m_xmlTest.getParallel())) {
 				sequentialClasses.add(cls);
 			}
 		}
@@ -892,21 +892,18 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 					if (System.getProperty("experimental") != null) {
 						List<List<IMethodInstance>> instances = createInstances(methodInstances);
 						for (List<IMethodInstance> inst : instances) {
-							TestMethodWorker worker = createTestMethodWorker(
-									inst, params, c);
+							TestMethodWorker worker = createTestMethodWorker(inst, params, c);
 							result.add(worker);
 						}
 					} else {
 						// Sequential class: all methods in one worker
-						TestMethodWorker worker = createTestMethodWorker(
-								methodInstances, params, c);
+						TestMethodWorker worker = createTestMethodWorker(methodInstances, params, c);
 						result.add(worker);
 					}
 				}
 			} else {
 				// Parallel class: each method in its own worker
-				TestMethodWorker worker = createTestMethodWorker(
-						Arrays.asList(im), params, c);
+				TestMethodWorker worker = createTestMethodWorker(Arrays.asList(im), params, c);
 				result.add(worker);
 			}
 		}
@@ -967,11 +964,19 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 	}
 
 	private TestMethodWorker createTestMethodWorker(
-			List<IMethodInstance> methodInstances, Map<String, String> params,
+			List<IMethodInstance> methodInstances, 
+			Map<String, String> params,
 			Class<?> c) {
-		return new TestMethodWorker(m_invoker, findClasses(methodInstances, c),
-				m_xmlTest.getSuite(), params, m_allTestMethods, m_groupMethods,
-				m_classMethodMap, this);
+		
+		return new TestMethodWorker(
+				m_invoker, 
+				findClasses(methodInstances, c),
+				m_xmlTest.getSuite(), 
+				params, 
+				m_allTestMethods, 
+				m_groupMethods,
+				m_classMethodMap, 
+				this);
 	}
 
 	private IMethodInstance[] findClasses(
@@ -988,8 +993,7 @@ public class TestRunner implements ITestContext, ITestResultNotifier,
 	/**
 	 * @@@ remove this
 	 */
-	private List<MethodInstance> methodsToMultipleMethodInstances(
-			ITestNGMethod... sl) {
+	private List<MethodInstance> methodsToMultipleMethodInstances(ITestNGMethod... sl) {
 		List<MethodInstance> vResult = Lists.newArrayList();
 		for (ITestNGMethod m : sl) {
 			vResult.add(new MethodInstance(m));

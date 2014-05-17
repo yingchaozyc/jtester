@@ -1090,10 +1090,14 @@ public class Invoker implements IInvoker {
 	 * is used)
 	 */
 	@Override
-	public List<ITestResult> invokeTestMethods(ITestNGMethod testMethod,
-			ITestNGMethod[] allTestMethods, int testMethodIndex,
-			XmlSuite suite, Map<String, String> testParameters,
-			ConfigurationGroupMethods groupMethods, Object[] instances,
+	public List<ITestResult> invokeTestMethods(
+			ITestNGMethod testMethod,
+			ITestNGMethod[] allTestMethods,
+			int testMethodIndex,
+			XmlSuite suite, 
+			Map<String, String> testParameters,
+			ConfigurationGroupMethods groupMethods, 
+			Object[] instances,
 			ITestContext testContext) {
 		// Potential bug here if the test method was declared on a parent class
 		assert null != testMethod.getTestClass() : "COULDN'T FIND TESTCLASS FOR "

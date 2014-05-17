@@ -117,6 +117,7 @@ public class DynamicGraph<T> {
 
 		// Sort the free nodes if requested (e.g. priorities)
 		if (result != null && !result.isEmpty()) {
+			// m_nodeComparator是否为空会影响到free node的排序。
 			if (m_nodeComparator != null) {
 				Collections.sort(result, m_nodeComparator);
 				ppp("Nodes after sorting:" + result.get(0));
@@ -177,6 +178,8 @@ public class DynamicGraph<T> {
 	}
 
 	/**
+	 * 图中的节点个数就是3中状态类型的个数之和
+	 * 
 	 * @return the number of nodes in this graph.
 	 */
 	public int getNodeCount() {

@@ -1490,6 +1490,8 @@ public class TestNG {
 	 */
 	public static TestNG privateMain(String[] argv, ITestListener listener) {
 		// TestNG初始化
+		// 注解转换器DefaultAnnotationTransformer初始化生成。
+		// 注解搜寻器JDK15AnnotationFinder初始化生成。
 		TestNG result = new TestNG();
 
 		// TestNG开始启动的时候这个listener肯定是空。所以不走这里。
