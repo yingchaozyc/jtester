@@ -1,5 +1,6 @@
 package com.alibaba.test.jcommander; 
 
+import java.util.Date;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
@@ -25,12 +26,23 @@ public class JCommanderTest1 {
 	@Parameter(names="-password", password=true, description="秘钥")
 	private String password;
 	
+	@Parameter(names="-date", converter=DateTimeConvert.class)
+	private Date date;
+	
 	public int getId() {
 		return id;
 	}
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
 	}
 
 	public String getName() {
@@ -83,6 +95,7 @@ public class JCommanderTest1 {
 		System.out.println("debug:" + test1.isDebug()); 
 		System.out.println("list:" + test1.getAddress()); 
 		System.out.println("password:" + test1.getPassword()); 
+		System.out.println("date:" + test1.getDate().getTime()); 
 	}
 }
 
