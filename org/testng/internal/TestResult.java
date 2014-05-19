@@ -105,12 +105,8 @@ public class TestResult implements ITestResult {
         }
       }
     }
-  }
-
-  private static void ppp(String s) {
-    System.out.println("[TestResult] " + s);
-  }
-
+  } 
+  
   @Override
   public void setEndMillis(long millis) {
     m_endMillis = millis;
