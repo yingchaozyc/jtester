@@ -16,10 +16,10 @@ import java.util.UUID;
 
 /** 
  *  一个标准的suite长的就是这个样子。
- *  <suite name="Default suite">
+ *  <suite name="Default suite">				---------XmlSuite负责的部分开始
  *	  <test verbose="2" name="Default test">    ---------XmlTest负责的部分开始
- *	    <classes>
- *	      <class name="com.alibaba.ceres.util.DateUtilTest"/>
+ *	    <classes>								
+ *	      <class name="com.alibaba.ceres.util.DateUtilTest"/>		---------XmlClass负责的部分开始,结束
  *	    </classes>
  *	  </test>  									---------XmlTest负责的部分结束
  *	</suite>  

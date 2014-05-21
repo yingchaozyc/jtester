@@ -339,13 +339,13 @@ public class TestNG {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("suiteXmlPath: \"" + suitePath + "\"");
 			}
-			try {
-				// 具体是如何解析的我不是太关心
+			try { 
+				// 相当繁杂的过程来解析XmlSuite，我真的不想关心了。只想知道出来大致是什么样子
 				Collection<XmlSuite> allSuites = getParser(suitePath).parse();
 
 				for (XmlSuite s : allSuites) {
 					// If test names were specified, only run these test names
-					if (m_testNames != null) {   // 这个是什么时候初始化的?
+					if (m_testNames != null) {   
 						m_suites.add(extractTestNames(s, m_testNames));
 					} else {
 						m_suites.add(s);		  // m_suites更新
@@ -453,8 +453,7 @@ public class TestNG {
 	}
 
 	private void initProcessor(Parser result) {
-		result.setPostProcessor(new OverrideProcessor(m_includedGroups,
-				m_excludedGroups));
+		result.setPostProcessor(new OverrideProcessor(m_includedGroups, m_excludedGroups));
 	}
 
 	/**
@@ -1118,6 +1117,7 @@ public class TestNG {
 	 */
 	public void run() {
 		// 初始化命令行传入的套件suites以及jar包内的suites
+		// 拿到了 List<XmlSuite>
 		initializeSuitesAndJarFile();
 		
 		// 在最简单的例子下，基本上没做什么事情。需要关注一下里边的那个反射调用到底在干吗。
@@ -1146,8 +1146,7 @@ public class TestNG {
 		runExecutionListeners(true /* start */);
 
 		m_start = System.currentTimeMillis();
- 
-		// TODO 这个值什么时候设置
+  
 		if (m_slavefileName != null) { 
 			// Slave mode 
 			SuiteSlave slave = new SuiteSlave(m_slavefileName, this);
@@ -1229,7 +1228,7 @@ public class TestNG {
 	public List<ISuite> runSuitesLocally() {
 		SuiteRunnerMap suiteRunnerMap = new SuiteRunnerMap();
 		if (m_suites.size() > 0) {
-			 // 默认的suite的verbose值是1. verbose代表什么含义? TODO
+			 // 当前suite的verbose级别高于2显示版本信息
 			if (m_suites.get(0).getVerbose() >= 2) {		
 				Version.displayBanner();
 			}
@@ -1495,7 +1494,7 @@ public class TestNG {
 		TestNG result = new TestNG();
 
 		// TestNG开始启动的时候这个listener肯定是空。所以不走这里。
-		// 什么时候不为空? TODO
+		// 什么时候不为空(公开API供其他人调用时?)? TODO
 		if (null != listener) {
 			result.addListener(listener);
 		}
@@ -1508,13 +1507,13 @@ public class TestNG {
 			CommandLineArgs cla = new CommandLineArgs();
 			
 			// 根据命令行传入参数解析为JCommander对象
+			// 一般来说，命令行之后定义xml和-d两个主要配置
 			m_jCommander = new JCommander(cla, argv);
 			
-			// 校验命令行参数 TODO  
-			// 这句不应该在m_jCommander = new JCommander(cla, argv)之前才对么
+			// 校验命令行参数  
 			validateCommandLineParameters(cla);
 			
-			// 根据传入的命令行参数配置TestNG。
+			// 根据传入的命令行参数配置TestNG。TestNG开始变得丰满了!
 			result.configure(cla);
 		} catch (ParameterException ex) {
 			exitWithError(ex.getMessage());

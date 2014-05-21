@@ -245,17 +245,20 @@ public class Graph<T> {
 		return result.toString();
 	}
 
-	// ///
+	// 图节点，实现了Comparable接口，所以图的节点是可以比较大小的。
 	// class Node
 	//
 	public static class Node<T> implements Comparable<Node<T>> {
 		private T m_object = null;
+		
+		// 入度为0的节点?
 		private Map<T, T> m_predecessors = Maps.newHashMap();
 
 		public Node(T tm) {
 			m_object = tm;
 		}
 
+		// 邻居节点，前后都算? TODO
 		private Set<Node<T>> m_neighbors = new HashSet<Node<T>>();
 
 		public void addNeighbor(Node<T> neighbor) {
